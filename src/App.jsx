@@ -246,7 +246,6 @@ const AskMeAnythingModal = ({ isOpen, onClose }) => {
     setLoading(true);
     setResponse(null);
 
-    // --- PASTE YOUR PERPLEXITY API KEY HERE (starts with pplx-...) ---
     const apiKey = import.meta.env.VITE_PERPLEXITY_API_KEY;
 
     try {
