@@ -411,7 +411,7 @@ const ContactForm = () => {
 
   // 🔴 PASTE YOUR GOOGLE WEB APP URL HERE
   const GOOGLE_SCRIPT_URL =
-    "https://script.google.com/macros/s/AKfycbwnFA1toZkjZ0_x5etfCgiYkMnpJlcp5yTt-cm36crAtD24Mj-44uwEezWGRSxHCyr-/exec";
+    "https://script.google.com/macros/s/AKfycbx55a10EQOejBRsu0GLd_PeUfmwF8RMtWr3_-xhqXG2A4hbqecjG5XxCCyFRMm75qZj/exec";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
