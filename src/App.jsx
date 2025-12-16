@@ -20,6 +20,18 @@ import remarkGfm from "remark-gfm";
 import { ThemeToggleButton } from "./components/ThemeToggleButton";
 import AskHint from "./components/tooltip";
 
+import crewscaleLogo from "./assets/Logos/CrewscaleLogo.png";
+import intelliflowLogo from "./assets/Logos/IntelliflowLogo.jpg";
+import kredxLogo from "./assets/Logos/KredXLogo.svg";
+import capgeminiLogo from "./assets/Logos/CapgeminiLogo.png";
+
+import rideRightImg from "./assets/RideRightPreview.png";
+import reachUImg from "./assets/reachu.png";
+import hgEditsImg from "./assets/hgeditsPreview.png";
+import websiteSrcImg from "./assets/website-source.png";
+import githubImg from "./assets/github.png";
+import portfolioImg from "./assets/Portfolio Image.png";
+
 // --- Data & Context ---
 
 const personalInfo = {
@@ -43,7 +55,7 @@ const personalInfo = {
 const experience = [
   {
     company: "Crewscale",
-    logo: "src/assets/Logos/CrewscaleLogo.png", // Update this path
+    logo: crewscaleLogo, // Update this path
     role: "Software Development Engineer",
     startDate: "Jul 2024",
     endDate: "Jun 2025",
@@ -56,7 +68,7 @@ const experience = [
   },
   {
     company: "Intelliflow.ai",
-    logo: "src/assets/Logos/IntelliflowLogo.jpg", // Update this path
+    logo: intelliflowLogo, // Update this path
     role: "Software Engineer",
     startDate: "Jun 2023",
     endDate: "Apr 2024",
@@ -69,7 +81,7 @@ const experience = [
   },
   {
     company: "KredX",
-    logo: "src/assets/Logos/KredXLogo.svg", // Update this path
+    logo: kredxLogo, // Update this path
     role: "Web / Application Developer Intern",
     startDate: "Jun 2022",
     endDate: "Sep 2022",
@@ -81,7 +93,7 @@ const experience = [
   },
   {
     company: "Capgemini",
-    logo: "src/assets/Logos/CapgeminiLogo.png", // Update this path
+    logo: capgeminiLogo, // Update this path
     role: "Cloud Engineer Intern",
     startDate: "Aug 2021",
     endDate: "Dec 2021",
@@ -114,35 +126,35 @@ const projects = [
     title: "RideRight",
     tech: "React Native / AWS",
     desc: "Seamless ride scheduling & navigation system for efficient travel.",
-    image: "src/assets/RideRightPreview.png", // Update path
+    image: rideRightImg, // Update path
     link: "https://www.youtube.com/watch?v=SzX901M4EUU", // Update link if specific repo exists
   },
   {
     title: "Reach-U",
     tech: "React / Node.js",
     desc: "Safety and connection platform helping users stay in touch.",
-    image: "/src/assets/reachu.png", // Update path
+    image: reachUImg, // Update path
     link: "https://github.com/TabsOverSpaces4/Reach-U",
   },
   {
     title: "HGEdits - Gallery",
     tech: "Web / Design",
     desc: "A visual showcase of creative edits, photography, and design work.",
-    image: "src/assets/hgeditsPreview.png", // Update path
+    image: hgEditsImg, // Update path
     link: "https://hgedits.github.io/",
   },
   {
     title: "Website Repo",
     tech: "React / Tailwind",
     desc: "The complete source code for this portfolio website.",
-    image: "src/assets/website-source.png", // Update path
+    image: websiteSrcImg, // Update path
     link: "https://github.com/TabsOverSpaces4/TabsOverSpaces4.github.io.git",
   },
   {
     title: "More on GitHub",
     tech: "Open Source",
     desc: "Explore my repositories, contributions, and experimental projects.",
-    image: "src/assets/github.png", // Update path
+    image: githubImg, // Update path
     link: "https://github.com/TabsOverSpaces4",
   },
 ];
@@ -934,7 +946,7 @@ export default function Portfolio() {
               >
                 <div className="aspect-[3/4] relative overflow-hidden group">
                   <img
-                    src="/src/assets/Portfolio Image.png"
+                    src={portfolioImg}
                     alt="Harsh Gupta"
                     onClick={openAsk}
                     className="absolute inset-0 w-full h-full object-cover"
