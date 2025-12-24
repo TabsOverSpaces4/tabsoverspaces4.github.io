@@ -244,13 +244,33 @@ const AskMeAnythingModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
 
+  const GOOGLE_SCRIPT_URL =
+    "https://script.google.com/macros/s/AKfycbzVW6_B9KJZntWrDJtBGHmt1jjocq6-xTDdyjZr_kAeCkv1HRpGhcaqRTxnUOqZKzOw/exec";
+
   useEffect(() => {
     if (isOpen && inputRef.current) {
       inputRef.current.focus();
     }
   }, [isOpen]);
 
-  
+  // Function to log question to Google Sheets
+  const logToGoogleSheets = async (question, aiResponse) => {
+    try {
+      const data = new FormData();
+      data.append("type", "ai_question");
+      data.append("question", question);
+      data.append("response", aiResponse || "");
+
+      await fetch(GOOGLE_SCRIPT_URL, {
+        method: "POST",
+        body: data,
+      });
+    } catch (error) {
+      console.error("Failed to log to Google Sheets:", error);
+      // Don't show error to user - logging is silent
+    }
+  };
+
   const handleSearch = async (e) => {
     e.preventDefault();
     if (!query.trim()) return;
@@ -283,16 +303,22 @@ const AskMeAnythingModal = ({ isOpen, onClose }) => {
       // Perplexity/OpenAI response structure
       const aiText = data?.choices?.[0]?.message?.content;
 
-      setResponse(
-        aiText || "I couldn't generate a response. Please try again."
-      );
+      const finalResponse =
+        aiText || "I couldn't generate a response. Please try again.";
+      setResponse(finalResponse);
+      setLoading(false); // Stop loading immediately after getting response
+
+      // Log to Google Sheets in background (non-blocking)
+      logToGoogleSheets(query, finalResponse);
     } catch (error) {
       console.error(error);
-      setResponse(
-        "Sorry, I encountered an error connecting to the AI service. Please check your API key."
-      );
-    } finally {
-      setLoading(false);
+      const errorMessage =
+        "Sorry, I encountered an error connecting to the AI service. Please check your API key.";
+      setResponse(errorMessage);
+      setLoading(false); // Stop loading even on error
+
+      // Log failed attempts in background
+      logToGoogleSheets(query, errorMessage);
     }
   };
 
@@ -411,7 +437,7 @@ const ContactForm = () => {
 
   // 🔴 PASTE YOUR GOOGLE WEB APP URL HERE
   const GOOGLE_SCRIPT_URL =
-    "https://script.google.com/macros/s/AKfycbx55a10EQOejBRsu0GLd_PeUfmwF8RMtWr3_-xhqXG2A4hbqecjG5XxCCyFRMm75qZj/exec";
+    "https://script.google.com/macros/s/AKfycbzVW6_B9KJZntWrDJtBGHmt1jjocq6-xTDdyjZr_kAeCkv1HRpGhcaqRTxnUOqZKzOw/exec";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
