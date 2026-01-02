@@ -38,7 +38,7 @@ const personalInfo = {
   name: "Harsh Gupta",
   title: "AI & Full-Stack Engineer",
   subtitle: "Building at Duke University",
-  email: "harshworks2401@gmail.com",
+  email: "harshgupta.duke@gmail.com",
   location: "Durham, NC",
   openToWork: true,
   interests: ["Product Management", "AI Engineering", "Full-Stack Development"],
