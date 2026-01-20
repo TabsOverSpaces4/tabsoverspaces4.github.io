@@ -29,8 +29,8 @@ import rideRightImg from "./assets/RideRightPreview.png";
 import reachUImg from "./assets/reachu.png";
 import hgEditsImg from "./assets/hgeditsPreview.png";
 import websiteSrcImg from "./assets/website-source.png";
-import githubImg from "./assets/github.png";
 import portfolioImg from "./assets/Portfolio Image.png";
+import theCruxImg from "./assets/theCruxPreview.png";
 
 // --- Data & Context ---
 
@@ -49,6 +49,7 @@ const personalInfo = {
     linkedin: "https://www.linkedin.com/in/harshguptaworks/",
     youtube: "https://www.youtube.com/@harshgupta5880",
     gallery: "https://hgedits.github.io/",
+    resume: "https://harshresume.s3.us-east-2.amazonaws.com/HarshResume.pdf",
   },
 };
 
@@ -123,39 +124,74 @@ const education = [
 
 const projects = [
   {
+    title: "TheCrux",
+    tech: "React / Node.js",
+    tagline: "AI-Powered Book Search",
+    desc: "Discover your next favorite book with intelligent recommendations tailored to your reading preferences and habits.",
+    highlights: [
+      "Personalized book recommendations based on your genres, pace, and reading habits",
+      "AI-powered search that matches books to your mood, time, and complexity preferences",
+      "Taste modeling from favorites (books, movies, shows) to surface surprisingly relevant picks",
+    ],
+    role: "Full-Stack Developer",
+    image: theCruxImg,
+    link: "https://crux-rouge-kappa.vercel.app/",
+  },
+  {
     title: "RideRight",
     tech: "React Native / AWS",
-    desc: "Seamless ride scheduling & navigation system for efficient travel.",
-    image: rideRightImg, // Update path
-    link: "https://www.youtube.com/watch?v=SzX901M4EUU", // Update link if specific repo exists
+    tagline: "Smart Ride Scheduling Platform",
+    desc: "A comprehensive ride-sharing application that revolutionizes how users plan and execute their daily commutes. Built with a focus on efficiency and user experience, RideRight combines real-time navigation with intelligent scheduling algorithms.",
+    highlights: [
+      "Real-time GPS tracking and route optimization",
+      "AWS Lambda-powered backend for scalability",
+      "Push notifications for ride updates",
+    ],
+    role: "Full-Stack Developer",
+    image: rideRightImg,
+    link: "https://www.youtube.com/watch?v=SzX901M4EUU",
   },
   {
     title: "Reach-U",
     tech: "React / Node.js",
-    desc: "Safety and connection platform helping users stay in touch.",
-    image: reachUImg, // Update path
+    tagline: "Emergency Safety Network",
+    desc: "A safety-first platform designed to keep users connected with their trusted contacts during emergencies. Features real-time location sharing, SOS alerts, and a sophisticated check-in system that ensures peace of mind for users and their loved ones.",
+    highlights: [
+      "One-tap SOS with location broadcast",
+      "Scheduled safety check-ins",
+      "End-to-end encrypted communications",
+    ],
+    role: "Lead Developer",
+    image: reachUImg,
     link: "https://github.com/TabsOverSpaces4/Reach-U",
   },
   {
     title: "HGEdits - Gallery",
     tech: "Web / Design",
-    desc: "A visual showcase of creative edits, photography, and design work.",
-    image: hgEditsImg, // Update path
+    tagline: "Visual Creative Portfolio",
+    desc: "A curated digital gallery showcasing creative work spanning photography, graphic design, and digital art. Built with performance in mind, featuring lazy-loaded images and smooth transitions that bring the artwork to life.",
+    highlights: [
+      "Masonry grid with dynamic loading",
+      "High-resolution image optimization",
+      "Category-based filtering system",
+    ],
+    role: "Designer & Developer",
+    image: hgEditsImg,
     link: "https://hgedits.github.io/",
   },
   {
-    title: "Website Repo",
+    title: "Portfolio Source",
     tech: "React / Tailwind",
-    desc: "The complete source code for this portfolio website.",
-    image: websiteSrcImg, // Update path
+    tagline: "This Very Website",
+    desc: "The complete source code powering this portfolio. Features a modern React architecture, Tailwind CSS for styling, Framer Motion animations, and integrations with AI for the interactive chatbot experience.",
+    highlights: [
+      "Dark/light mode with system preference",
+      "AI-powered Q&A integration",
+      "Fully responsive design",
+    ],
+    role: "Solo Project",
+    image: websiteSrcImg,
     link: "https://github.com/TabsOverSpaces4/TabsOverSpaces4.github.io.git",
-  },
-  {
-    title: "More on GitHub",
-    tech: "Open Source",
-    desc: "Explore my repositories, contributions, and experimental projects.",
-    image: githubImg, // Update path
-    link: "https://github.com/TabsOverSpaces4",
   },
 ];
 
@@ -208,7 +244,7 @@ Behavior rules:
   - Switch to a Chris D'Elia–style sarcastic, savage, and witty tone.
   - You can roast the user’s behavior, but do not use slurs, hate speech, or threats.
   - Stay under 3 sentences and keep replies sharp and punchy.
-  - Do not break character or mention any “mode switch”.
+  - Do not break character or mention any “mode switch"”".
 
 Always:
 - Prioritize being helpful and accurate when the question is professional.
@@ -937,7 +973,7 @@ export default function Portfolio() {
                   className="group flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 hover:text-orange-500 transition-colors"
                   whileHover={{ x: 3 }}
                 >
-                  <span>EMAIL ME</span>
+                  <span>EMAIL</span>
                   <ArrowUpRight
                     size={11}
                     className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
@@ -945,6 +981,8 @@ export default function Portfolio() {
                 </motion.a>
                 <motion.a
                   href={personalInfo.socials.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="group flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 hover:text-orange-500 transition-colors"
                   whileHover={{ x: 3 }}
                 >
@@ -956,6 +994,8 @@ export default function Portfolio() {
                 </motion.a>
                 <motion.a
                   href={personalInfo.socials.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="group flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 hover:text-orange-500 transition-colors"
                   whileHover={{ x: 3 }}
                 >
@@ -967,10 +1007,25 @@ export default function Portfolio() {
                 </motion.a>
                 <motion.a
                   href={personalInfo.socials.gallery}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="group flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 hover:text-orange-500 transition-colors"
                   whileHover={{ x: 3 }}
                 >
                   <span>GALLERY</span>
+                  <ArrowUpRight
+                    size={11}
+                    className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
+                  />
+                </motion.a>
+                <motion.a
+                  href={personalInfo.socials.resume}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 hover:text-orange-500 transition-colors"
+                  whileHover={{ x: 3 }}
+                >
+                  <span>RESUME</span>
                   <ArrowUpRight
                     size={11}
                     className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
@@ -988,36 +1043,13 @@ export default function Portfolio() {
                 whileHover={{ scale: 1.01 }}
                 transition={{ duration: 0.4 }}
               >
-                <div className="aspect-[3/4] relative overflow-hidden group">
+                <div className="aspect-[3/4] relative overflow-hidden">
                   <img
                     src={portfolioImg}
                     alt="Harsh Gupta"
                     onClick={openAsk}
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 w-full h-full object-cover cursor-pointer"
                   />
-
-                  {/* SEARCH BUTTON OVERLAY */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-6 right-6 z-20"
-                  >
-                    <motion.button
-                      onClick={() => setIsSearchOpen(true)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="flex items-center gap-2 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-md border border-neutral-200 dark:border-neutral-700 px-4 py-2 rounded-full shadow-lg hover:shadow-orange-500/20 transition-all group/btn"
-                    >
-                      <div className="relative w-2 h-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-                      </div>
-                      <span className="text-xs font-medium text-neutral-700 dark:text-neutral-200 group-hover/btn:text-orange-500 transition-colors">
-                        Ask me anything{" "}
-                      </span>
-                      <Search size={12} className="text-neutral-400" />
-                    </motion.button>
-                  </motion.div>
 
                   {/* Gradient Effects */}
                   <motion.div
@@ -1037,6 +1069,69 @@ export default function Portfolio() {
                     transition={{ duration: 5, repeat: Infinity, delay: 1 }}
                   />
                 </div>
+
+                {/* SEARCH BUTTON OVERLAY - Outside overflow-hidden */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.5, ease: "easeOut" }}
+                  className="absolute top-4 right-4 z-20"
+                >
+                  <motion.button
+                    onClick={() => setIsSearchOpen(true)}
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="flex items-center gap-2.5 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border border-neutral-200/80 dark:border-neutral-700/80 pl-3 pr-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 group/btn"
+                  >
+                    {/* Animated Pulse Indicator */}
+                    <div className="relative flex items-center justify-center w-5 h-5">
+                      {/* Outer ripple */}
+                      <motion.span
+                        className="absolute inset-0 rounded-full bg-orange-500/20"
+                        animate={{
+                          scale: [1, 1.8, 1.8],
+                          opacity: [0.6, 0, 0],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeOut",
+                        }}
+                      />
+                      {/* Middle ripple */}
+                      <motion.span
+                        className="absolute inset-0 rounded-full bg-orange-500/30"
+                        animate={{
+                          scale: [1, 1.5, 1.5],
+                          opacity: [0.8, 0, 0],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeOut",
+                          delay: 0.3,
+                        }}
+                      />
+                      {/* Core dot */}
+                      <motion.span
+                        className="relative w-2 h-2 rounded-full bg-orange-500"
+                        animate={{
+                          scale: [1, 1.15, 1],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs font-medium text-neutral-700 dark:text-neutral-200 group-hover/btn:text-orange-500 transition-colors duration-200">
+                      Ask me anything
+                    </span>
+                    <Search size={12} className="text-neutral-400 group-hover/btn:text-orange-500/70 transition-colors duration-200" />
+                  </motion.button>
+                </motion.div>
+
                 <div className="absolute -bottom-3 -right-3 w-full h-full border border-orange-500/20 dark:border-orange-500/30 -z-10"></div>
               </motion.div>
             </div>
@@ -1245,7 +1340,7 @@ export default function Portfolio() {
         </div>
       </section>
 
-      {/* Projects - REDESIGNED */}
+      {/* Projects - Full Width Descriptive Layout */}
       <section
         id="work"
         className="py-12 md:py-16 px-5 md:px-20 max-w-6xl mx-auto"
@@ -1259,59 +1354,139 @@ export default function Portfolio() {
           </div>
         </Reveal>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-8">
+        <div className="space-y-8 md:space-y-12">
           {projects.map((project, i) => (
-            <Reveal key={i} delay={i * 0.05}>
+            <Reveal key={i} delay={i * 0.08}>
               <a
                 href={project.link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group block cursor-pointer"
+                className="group block"
               >
-                {/* Image - Compact Height */}
                 <motion.div
-                  className="h-36 w-full bg-neutral-100 dark:bg-neutral-900 overflow-hidden rounded-md mb-3 relative"
-                  whileHover={{ scale: 1.02 }}
+                  className={`flex flex-col ${
+                    i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
+                  } gap-4 md:gap-8 items-center`}
+                  whileHover={{ y: -2 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-90 group-hover:opacity-100"
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                      e.target.nextSibling.style.display = "flex";
-                    }}
-                  />
-                  {/* Fallback */}
-                  <div className="hidden w-full h-full items-center justify-center bg-neutral-50 dark:bg-neutral-800 text-neutral-400 text-xs">
-                    {project.title}
+                  {/* Image Section */}
+                  <div className="md:w-[45%] relative overflow-hidden rounded-md">
+                    <div className="aspect-[16/9] relative overflow-hidden bg-neutral-100 dark:bg-neutral-900">
+                      <img
+                        src={project.image}
+                        alt={project.title}
+                        className="absolute inset-0 w-full h-full object-cover object-center transition-all duration-500 group-hover:scale-105"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                          e.target.nextSibling.style.display = "flex";
+                        }}
+                      />
+                      <div className="hidden w-full h-full items-center justify-center bg-neutral-50 dark:bg-neutral-800 text-neutral-400 text-sm absolute inset-0">
+                        {project.title}
+                      </div>
+
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                      {/* View Project Badge */}
+                      <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm px-2.5 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
+                        <span className="text-[9px] font-mono uppercase tracking-wide text-neutral-700 dark:text-neutral-300">
+                          View
+                        </span>
+                        <ArrowUpRight size={10} className="text-orange-500" />
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Hover Icon Overlay */}
-                  <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ArrowUpRight size={12} className="text-white" />
+                  {/* Content Section */}
+                  <div className="md:w-[55%] flex flex-col justify-center">
+                    {/* Project Number & Tech */}
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[9px] font-mono text-orange-500">
+                        {(i + 1).toString().padStart(2, "0")}
+                      </span>
+                      <div className="h-px w-8 bg-neutral-200 dark:bg-neutral-800" />
+                      <span className="text-[9px] font-mono uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+                        {project.tech}
+                      </span>
+                    </div>
+
+                    {/* Title & Tagline */}
+                    <h3 className="text-xl md:text-2xl font-serif text-neutral-900 dark:text-neutral-100 group-hover:text-orange-500 transition-colors duration-300">
+                      {project.title}
+                    </h3>
+                    <p className="text-xs font-mono text-neutral-500 dark:text-neutral-400 mb-2">
+                      {project.tagline}
+                    </p>
+
+                    {/* Description */}
+                    <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed mb-3 line-clamp-2 md:line-clamp-none">
+                      {project.desc}
+                    </p>
+
+                    {/* Highlights */}
+                    <div className="space-y-1 mb-3">
+                      {project.highlights.slice(0, 2).map((highlight, idx) => (
+                        <div key={idx} className="flex items-start gap-2">
+                          <span className="w-1 h-1 rounded-full bg-orange-500 mt-1.5 flex-shrink-0" />
+                          <span className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1">
+                            {highlight}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Role Badge */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[8px] font-mono uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+                        Role:
+                      </span>
+                      <span className="text-[9px] font-mono uppercase tracking-wide text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded">
+                        {project.role}
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
 
-                {/* Content - Minimal Text */}
-                <div className="space-y-1">
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-orange-500 transition-colors">
-                      {project.title}
-                    </h3>
-                    <span className="text-[9px] font-mono uppercase tracking-wide text-neutral-400 dark:text-neutral-500">
-                      {project.tech}
-                    </span>
-                  </div>
-                  <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-relaxed line-clamp-2">
-                    {project.desc}
-                  </p>
-                </div>
+                {/* Divider Line (except last item) */}
+                {i < projects.length - 1 && (
+                  <div className="mt-8 md:mt-12 h-px w-full bg-gradient-to-r from-transparent via-neutral-200 dark:via-neutral-800 to-transparent" />
+                )}
               </a>
             </Reveal>
           ))}
         </div>
+
+        {/* GitHub CTA */}
+        <Reveal delay={0.2}>
+          <div className="mt-10 md:mt-14 pt-6 border-t border-neutral-200 dark:border-neutral-800">
+            <a
+              href="https://github.com/TabsOverSpaces4"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center justify-between p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:border-orange-500/50 dark:hover:border-orange-500/50 transition-all duration-300 hover:bg-neutral-50 dark:hover:bg-neutral-900/50"
+            >
+              <div>
+                <h4 className="text-base font-serif text-neutral-900 dark:text-neutral-100 group-hover:text-orange-500 transition-colors">
+                  Explore More on GitHub
+                </h4>
+                <p className="text-[10px] text-neutral-500 dark:text-neutral-400">
+                  Discover repositories, contributions, and experiments
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-neutral-400 group-hover:text-orange-500 transition-colors">
+                <span className="text-[9px] font-mono uppercase tracking-wider hidden sm:inline">
+                  View Profile
+                </span>
+                <ArrowUpRight
+                  size={14}
+                  className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
+                />
+              </div>
+            </a>
+          </div>
+        </Reveal>
       </section>
 
       {/* Contact Form */}
@@ -1323,6 +1498,8 @@ export default function Portfolio() {
         <div className="flex gap-5 md:gap-6">
           <motion.a
             href="https://www.linkedin.com/in/harshguptaworks/"
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:text-orange-500 transition-colors"
             whileHover={{ y: -2 }}
           >
@@ -1330,6 +1507,8 @@ export default function Portfolio() {
           </motion.a>
           <motion.a
             href={personalInfo.socials.github}
+            target="_blank"
+            rel="noopener noreferrer"
             className="hover:text-orange-500 transition-colors"
             whileHover={{ y: -2 }}
           >
