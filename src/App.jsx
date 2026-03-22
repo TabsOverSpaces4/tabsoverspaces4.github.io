@@ -128,7 +128,7 @@ const projects = [
     title: "AssistAI",
     tech: "Chrome Extension / Gemini AI",
     tagline: "Cognitive AI Usage Tracker",
-    desc: "A Chrome extension that watches how you think alongside AI — not what you type. It tracks behavioral signals like scroll depth, prompt edit rate, and thinking time to score your Cognitive Engagement, AI Reliance, and Prompt Quality.",
+    desc: "A Chrome extension that watches how you think alongside AI and not what you type. It tracks behavioral signals like scroll depth, prompt edit rate, and thinking time to score your Cognitive Engagement, AI Reliance, and Prompt Quality.",
     highlights: [
       "Behavioral signal tracking — no prompts or text ever collected",
       "Gemini AI analysis generates personalized scores and improvement tips",
