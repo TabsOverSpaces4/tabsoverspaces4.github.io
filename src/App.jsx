@@ -26,7 +26,7 @@ import kredxLogo from "./assets/Logos/KredXLogo.svg";
 import capgeminiLogo from "./assets/Logos/CapgeminiLogo.png";
 
 import rideRightImg from "./assets/RideRightPreview.png";
-import reachUImg from "./assets/reachu.png";
+import reachUImg from "./assets/ReachU.png";
 import hgEditsImg from "./assets/hgeditsPreview.png";
 import websiteSrcImg from "./assets/website-source.png";
 import portfolioImg from "./assets/Portfolio Image.png";
