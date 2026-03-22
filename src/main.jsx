@@ -13,6 +13,10 @@ function AppRouter() {
     return () => window.removeEventListener('popstate', handleNav)
   }, [])
 
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [path])
+
   if (path === '/projects/assistai') return <AssistAIPage />
   return <Portfolio />
 }
