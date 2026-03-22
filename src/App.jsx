@@ -31,6 +31,7 @@ import hgEditsImg from "./assets/hgeditsPreview.png";
 import websiteSrcImg from "./assets/website-source.png";
 import portfolioImg from "./assets/Portfolio Image.png";
 import theCruxImg from "./assets/theCruxPreview.png";
+import theAssistAIImg from "./assets/AssistAIPreview.png";
 
 // --- Data & Context ---
 
@@ -123,6 +124,21 @@ const education = [
 ];
 
 const projects = [
+  {
+    title: "AssistAI",
+    tech: "Chrome Extension / Gemini AI",
+    tagline: "Cognitive AI Usage Tracker",
+    desc: "A Chrome extension that watches how you think alongside AI — not what you type. It tracks behavioral signals like scroll depth, prompt edit rate, and thinking time to score your Cognitive Engagement, AI Reliance, and Prompt Quality.",
+    highlights: [
+      "Behavioral signal tracking — no prompts or text ever collected",
+      "Gemini AI analysis generates personalized scores and improvement tips",
+      "100% local storage — no accounts, no servers, no data leaving the browser",
+    ],
+    role: "Solo Project",
+    image: theAssistAIImg,
+    link: "/projects/assistai",
+    internal: true,
+  },
   {
     title: "TheCrux",
     tech: "React / Node.js",
@@ -738,6 +754,30 @@ const ContactForm = () => {
 };
 
 // --- Components ---
+
+const ProjectCard = ({ project, children }) =>
+  project.internal ? (
+    <a
+      href={project.link}
+      onClick={(e) => {
+        e.preventDefault()
+        window.history.pushState({}, '', project.link)
+        window.dispatchEvent(new PopStateEvent('popstate'))
+      }}
+      className="group block"
+    >
+      {children}
+    </a>
+  ) : (
+    <a
+      href={project.link}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group block"
+    >
+      {children}
+    </a>
+  );
 
 const SectionHeading = ({ children }) => (
   <h2 className="text-[10px] font-mono uppercase tracking-[0.25em] text-neutral-400 dark:text-neutral-500 mb-6">
@@ -1357,12 +1397,8 @@ export default function Portfolio() {
         <div className="space-y-8 md:space-y-12">
           {projects.map((project, i) => (
             <Reveal key={i} delay={i * 0.08}>
-              <a
-                href={project.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group block"
-              >
+              <ProjectCard project={project} i={i}>
+
                 <motion.div
                   className={`flex flex-col ${
                     i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
@@ -1453,7 +1489,7 @@ export default function Portfolio() {
                 {i < projects.length - 1 && (
                   <div className="mt-8 md:mt-12 h-px w-full bg-gradient-to-r from-transparent via-neutral-200 dark:via-neutral-800 to-transparent" />
                 )}
-              </a>
+              </ProjectCard>
             </Reveal>
           ))}
         </div>
