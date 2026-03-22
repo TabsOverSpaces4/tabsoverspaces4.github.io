@@ -28,6 +28,21 @@
     <meta name="twitter:title" content="Harsh Gupta - Portfolio" />
     <meta name="twitter:description" content="Duke MEM & Full-Stack Developer. Explore my work in AI, React, and Cloud Computing." />
     
+    <!-- Single-page app route restore — github.com/rafgraph/spa-github-pages -->
+    <script>
+      (function (l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search.slice(1).split('&').map(function (s) {
+            return s.replace(/~and~/g, '&');
+          });
+          window.history.replaceState(
+            null, null,
+            decoded.shift() + (decoded.length ? '?' + decoded.join('&') : '') + l.hash
+          );
+        }
+      }(window.location));
+    </script>
+
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
