@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 
-function AskHint() {
+export default function AskHint() {
   const isMac = navigator.platform.toUpperCase().includes("MAC");
   const shortcut = isMac ? "⌘ K" : "Ctrl K";
 
@@ -26,4 +26,3 @@ function AskHint() {
     </motion.div>
   );
 }
-export default AskHint;
