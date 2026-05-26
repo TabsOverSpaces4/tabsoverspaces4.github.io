@@ -16,30 +16,39 @@ function corsHeaders(origin) {
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
+    const headers = corsHeaders(origin);
 
-    if (request.method === "OPTIONS") {
-      return new Response(null, { status: 204, headers: corsHeaders(origin) });
-    }
-
-    if (request.method !== "POST") {
-      return new Response("Method Not Allowed", { status: 405 });
-    }
-
-    let body;
     try {
-      body = await request.json();
-    } catch {
-      return new Response("Invalid JSON body", { status: 400 });
-    }
+      if (request.method === "OPTIONS") {
+        return new Response(null, { status: 204, headers });
+      }
 
-    const { query, systemPrompt } = body;
-    if (!query?.trim()) {
-      return new Response("Missing query", { status: 400 });
-    }
+      if (request.method !== "POST") {
+        return new Response("Method Not Allowed", {
+          status: 405,
+          headers,
+        });
+      }
 
-    let anthropicRes;
-    try {
-      anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
+      let body;
+      try {
+        body = await request.json();
+      } catch (_e) {
+        return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...headers },
+        });
+      }
+
+      const { query, systemPrompt } = body;
+      if (!query || !query.trim()) {
+        return new Response(JSON.stringify({ error: "Missing query" }), {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...headers },
+        });
+      }
+
+      const anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -53,27 +62,27 @@ export default {
           messages: [{ role: "user", content: query }],
         }),
       });
+
+      if (!anthropicRes.ok) {
+        const errText = await anthropicRes.text();
+        return new Response(JSON.stringify({ error: errText }), {
+          status: anthropicRes.status,
+          headers: { "Content-Type": "application/json", ...headers },
+        });
+      }
+
+      const data = await anthropicRes.json();
+      const text = (data && data.content && data.content[0] && data.content[0].text) || "";
+
+      return new Response(JSON.stringify({ text }), {
+        status: 200,
+        headers: { "Content-Type": "application/json", ...headers },
+      });
     } catch (err) {
-      return new Response(
-        JSON.stringify({ error: "Failed to reach Anthropic API" }),
-        { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
-      );
+      return new Response(JSON.stringify({ error: err.message || "Internal worker error" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...headers },
+      });
     }
-
-    if (!anthropicRes.ok) {
-      const errText = await anthropicRes.text();
-      return new Response(
-        JSON.stringify({ error: errText }),
-        { status: anthropicRes.status, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
-      );
-    }
-
-    const data = await anthropicRes.json();
-    const text = data?.content?.[0]?.text || "";
-
-    return new Response(
-      JSON.stringify({ text }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders(origin) } }
-    );
   },
 };
