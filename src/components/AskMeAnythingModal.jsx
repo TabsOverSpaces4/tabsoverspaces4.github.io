@@ -43,29 +43,22 @@ const AskMeAnythingModal = ({ isOpen, onClose }) => {
     setLoading(true);
     setResponse(null);
 
-    const apiKey = import.meta.env.VITE_CLAUDE_API_KEY;
+    const workerUrl = import.meta.env.VITE_WORKER_URL;
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch(workerUrl, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1024,
-          system: portfolioContext,
-          messages: [{ role: "user", content: query }],
+          query,
+          systemPrompt: portfolioContext,
         }),
       });
 
       if (!res.ok) throw new Error("API call failed");
 
       const data = await res.json();
-      const aiText = data?.content?.[0]?.text;
+      const aiText = data?.text;
 
       const finalResponse =
         aiText || "I couldn't generate a response. Please try again.";
