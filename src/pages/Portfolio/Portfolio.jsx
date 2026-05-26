@@ -3,7 +3,6 @@ import { motion, useScroll, AnimatePresence } from "framer-motion";
 import {
   ArrowUpRight,
   ChevronDown,
-  Search,
   GraduationCap,
 } from "lucide-react";
 import AskHint from "../../components/AskHint";
@@ -11,6 +10,7 @@ import AskMeAnythingModal from "../../components/AskMeAnythingModal";
 import ContactForm from "../../components/ContactForm";
 import ProjectCard from "../../components/ProjectCard";
 import LatestWorkCard from "../../components/LatestWorkCard";
+import ImageNavOverlay from "../../components/ImageNavOverlay";
 import { Reveal } from "../../components/Reveal";
 import { SectionHeading } from "../../components/SectionHeading";
 import {
@@ -302,8 +302,7 @@ export default function Portfolio() {
                   <img
                     src={portfolioImg}
                     alt="Harsh Gupta"
-                    onClick={openAsk}
-                    className="absolute inset-0 w-full h-full object-cover cursor-pointer"
+                    className="absolute inset-0 w-full h-full object-cover"
                   />
 
                   <motion.div
@@ -322,64 +321,9 @@ export default function Portfolio() {
                     }}
                     transition={{ duration: 5, repeat: Infinity, delay: 1 }}
                   />
-                </div>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5, duration: 0.5, ease: "easeOut" }}
-                  className="absolute top-4 right-4 z-20"
-                >
-                  <motion.button
-                    onClick={() => setIsSearchOpen(true)}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="flex items-center gap-2.5 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border border-neutral-200/80 dark:border-neutral-700/80 pl-3 pr-4 py-2 rounded-full shadow-lg hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 group/btn"
-                  >
-                    <div className="relative flex items-center justify-center w-5 h-5">
-                      <motion.span
-                        className="absolute inset-0 rounded-full bg-orange-500/20"
-                        animate={{
-                          scale: [1, 1.8, 1.8],
-                          opacity: [0.6, 0, 0],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeOut",
-                        }}
-                      />
-                      <motion.span
-                        className="absolute inset-0 rounded-full bg-orange-500/30"
-                        animate={{
-                          scale: [1, 1.5, 1.5],
-                          opacity: [0.8, 0, 0],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeOut",
-                          delay: 0.3,
-                        }}
-                      />
-                      <motion.span
-                        className="relative w-2 h-2 rounded-full bg-orange-500"
-                        animate={{
-                          scale: [1, 1.15, 1],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                      />
-                    </div>
-                    <span className="text-xs font-medium text-neutral-700 dark:text-neutral-200 group-hover/btn:text-orange-500 transition-colors duration-200">
-                      Ask me anything
-                    </span>
-                    <Search size={12} className="text-neutral-400 group-hover/btn:text-orange-500/70 transition-colors duration-200" />
-                  </motion.button>
-                </motion.div>
+                  <ImageNavOverlay onAskClick={openAsk} />
+                </div>
 
                 <div className="absolute -bottom-3 -right-3 w-full h-full border border-orange-500/20 dark:border-orange-500/30 -z-10"></div>
               </motion.div>

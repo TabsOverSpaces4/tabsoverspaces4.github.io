@@ -10,6 +10,7 @@ import websiteSrcImg from "../assets/website-source.png";
 import portfolioImg from "../assets/Portfolio Image.png";
 import theCruxImg from "../assets/theCruxPreview.png";
 import theAssistAIImg from "../assets/AssistAIPreview.png";
+import unboxdImg from "../assets/unboxedPreview.png";
 
 export const personalInfo = {
   name: "Harsh Gupta",
@@ -113,6 +114,20 @@ export const projects = [
     image: theAssistAIImg,
     link: "/projects/assistai",
     internal: true,
+  },
+  {
+    title: "Unboxd",
+    tech: "Product Analysis / Editorial",
+    tagline: "Weekly Product Teardown Series",
+    desc: "A structured product teardown series where three rotating authors dissect competing products with deep-dive analyses, feature tables, ratings, and use-case recommendations. No sponsorships, no affiliate deals — just rigorous, opinionated product thinking.",
+    highlights: [
+      "Rotating author cycle — two teardowns followed by a head-to-head comparison",
+      "Authored teardowns on Notion's product architecture and iOS from an Android switcher's perspective",
+      "Co-created with Vamsi Krishnan Ananthakrishnan and David Yun",
+    ],
+    role: "Co-Creator & Author",
+    image: unboxdImg,
+    link: "https://teardown-blog.vercel.app/",
   },
   {
     title: "TheCrux",
