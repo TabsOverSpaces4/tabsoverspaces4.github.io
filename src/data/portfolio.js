@@ -26,7 +26,7 @@ export const personalInfo = {
     github: "https://github.com/TabsOverSpaces4",
     linkedin: "https://www.linkedin.com/in/harshguptaworks/",
     youtube: "https://www.youtube.com/@harshgupta5880",
-    gallery: "https://hgedits.github.io/",
+    gallery: "https://wellexposedbyhg.vercel.app/",
     resume: "https://harshresume.s3.us-east-2.amazonaws.com/HarshResume.pdf",
   },
 };
@@ -183,7 +183,7 @@ export const projects = [
     ],
     role: "Designer & Developer",
     image: hgEditsImg,
-    link: "https://hgedits.github.io/",
+    link: "https://wellexposedbyhg.vercel.app/",
   },
   {
     title: "Portfolio Source",
@@ -315,7 +315,7 @@ Bio: Currently pursuing a Master of Engineering Management at Duke University, l
   A safety-first platform with one-tap SOS, real-time location broadcast, scheduled safety check-ins, and end-to-end encrypted communications.
 
 - HGEdits Gallery (Web / Design) — Designer & Developer
-  A curated digital gallery showcasing photography, graphic design, and digital art with masonry grid, lazy-loaded images, and category-based filtering. URL: https://hgedits.github.io/
+  A curated digital gallery showcasing photography, graphic design, and digital art with masonry grid, lazy-loaded images, and category-based filtering. URL: https://wellexposedbyhg.vercel.app/
 
 - Portfolio Website (React / Tailwind / Framer Motion) — Solo Project
   This very website — features dark/light mode, AI-powered Q&A (this chat), Framer Motion animations, Cloudflare Worker proxy for secure API calls, and a fully responsive design. Source: https://github.com/TabsOverSpaces4/TabsOverSpaces4.github.io.git
