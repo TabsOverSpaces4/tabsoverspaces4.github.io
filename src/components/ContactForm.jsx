@@ -1,8 +1,4 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Send, Loader2, Mail, User, MessageSquare } from "lucide-react";
-import { Reveal } from "./Reveal";
-import { SectionHeading } from "./SectionHeading";
 
 const GOOGLE_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbzVW6_B9KJZntWrDJtBGHmt1jjocq6-xTDdyjZr_kAeCkv1HRpGhcaqRTxnUOqZKzOw/exec";
@@ -15,7 +11,6 @@ const ContactForm = () => {
     message: "",
   });
   const [status, setStatus] = useState("idle");
-  const [focusedField, setFocusedField] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,6 +34,7 @@ const ContactForm = () => {
         setTimeout(() => setStatus("idle"), 3000);
       } else {
         setStatus("error");
+        setTimeout(() => setStatus("idle"), 3000);
       }
     } catch (error) {
       console.error("Error submitting form", error);
@@ -54,195 +50,97 @@ const ContactForm = () => {
     }));
   };
 
-  return (
-    <section id="contact" className="py-24 px-6 md:px-20 max-w-4xl mx-auto">
-      <Reveal>
-        <div className="mb-12 text-center">
-          <SectionHeading>Let's Connect</SectionHeading>
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <p className="text-sm text-neutral-500 dark:text-neutral-400 max-w-md mx-auto">
-              Have a project in mind or want to discuss opportunities? I
-              typically respond within 24 hours.
-            </p>
-          </motion.div>
-        </div>
-      </Reveal>
+  const buttonLabel =
+    status === "sending"
+      ? "Sending…"
+      : status === "success"
+        ? "Sent — talk soon ✓"
+        : status === "error"
+          ? "Try again"
+          : "Send Message";
 
-      <Reveal delay={0.1}>
-        <div className="space-y-6 max-w-xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <motion.div
-              className="space-y-2"
-              whileHover={{ scale: 1.01 }}
-              transition={{ duration: 0.2 }}
-            >
-              <label className="text-[10px] font-mono uppercase tracking-widest text-neutral-400 flex items-center gap-2">
-                <User size={10} />
+  return (
+    <section className="contact relative z-[2] py-[56px] md:py-[88px]" id="contact">
+      <div className="w-[min(1280px,92vw)] mx-auto">
+        <span className="eyebrow center" data-reveal>Let&apos;s Connect</span>
+        <p className="intro" data-reveal data-reveal-delay="1">
+          Have a project in mind or want to discuss opportunities? I typically respond{" "}
+          <b>within 24 hours.</b>
+        </p>
+
+        <form className="c-form" onSubmit={handleSubmit} data-reveal data-reveal-delay="2">
+          <div className="c-row">
+            <div className="field">
+              <label>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" /></svg>
                 Name
               </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  onFocus={() => setFocusedField("name")}
-                  onBlur={() => setFocusedField(null)}
-                  required
-                  className="w-full bg-transparent border-b border-neutral-200 dark:border-neutral-800 focus:border-orange-500 dark:focus:border-orange-500 outline-none py-2.5 text-sm text-neutral-900 dark:text-neutral-100 transition-all placeholder:text-neutral-400"
-                  placeholder="John Doe"
-                />
-                <motion.div
-                  className="absolute bottom-0 left-0 h-[1px] bg-orange-500"
-                  initial={{ width: 0 }}
-                  animate={{ width: focusedField === "name" ? "100%" : "0%" }}
-                  transition={{ duration: 0.3 }}
-                />
-              </div>
-            </motion.div>
-
-            <motion.div
-              className="space-y-2"
-              whileHover={{ scale: 1.01 }}
-              transition={{ duration: 0.2 }}
-            >
-              <label className="text-[10px] font-mono uppercase tracking-widest text-neutral-400 flex items-center gap-2">
-                <Mail size={10} />
-                Email
-              </label>
-              <div className="relative">
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  onFocus={() => setFocusedField("email")}
-                  onBlur={() => setFocusedField(null)}
-                  required
-                  className="w-full bg-transparent border-b border-neutral-200 dark:border-neutral-800 focus:border-orange-500 dark:focus:border-orange-500 outline-none py-2.5 text-sm text-neutral-900 dark:text-neutral-100 transition-all placeholder:text-neutral-400"
-                  placeholder="john@example.com"
-                />
-                <motion.div
-                  className="absolute bottom-0 left-0 h-[1px] bg-orange-500"
-                  initial={{ width: 0 }}
-                  animate={{ width: focusedField === "email" ? "100%" : "0%" }}
-                  transition={{ duration: 0.3 }}
-                />
-              </div>
-            </motion.div>
-          </div>
-
-          <motion.div
-            className="space-y-2"
-            whileHover={{ scale: 1.01 }}
-            transition={{ duration: 0.2 }}
-          >
-            <label className="text-[10px] font-mono uppercase tracking-widest text-neutral-400 flex items-center gap-2">
-              <MessageSquare size={10} />
-              Subject
-            </label>
-            <div className="relative">
               <input
                 type="text"
-                name="subject"
-                value={formData.subject}
+                name="name"
+                value={formData.name}
                 onChange={handleChange}
-                onFocus={() => setFocusedField("subject")}
-                onBlur={() => setFocusedField(null)}
+                placeholder="John Doe"
                 required
-                className="w-full bg-transparent border-b border-neutral-200 dark:border-neutral-800 focus:border-orange-500 dark:focus:border-orange-500 outline-none py-2.5 text-sm text-neutral-900 dark:text-neutral-100 transition-all placeholder:text-neutral-400"
-                placeholder="Project collaboration"
-              />
-              <motion.div
-                className="absolute bottom-0 left-0 h-[1px] bg-orange-500"
-                initial={{ width: 0 }}
-                animate={{ width: focusedField === "subject" ? "100%" : "0%" }}
-                transition={{ duration: 0.3 }}
               />
             </div>
-          </motion.div>
+            <div className="field">
+              <label>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="john@example.com"
+                required
+              />
+            </div>
+          </div>
 
-          <motion.div
-            className="space-y-2"
-            whileHover={{ scale: 1.01 }}
-            transition={{ duration: 0.2 }}
-          >
-            <label className="text-[10px] font-mono uppercase tracking-widest text-neutral-400">
-              Message
+          <div className="field" style={{ marginBottom: 38 }}>
+            <label>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+              Subject
             </label>
+            <input
+              type="text"
+              name="subject"
+              value={formData.subject}
+              onChange={handleChange}
+              placeholder="Project collaboration"
+            />
+          </div>
+
+          <div className="field area">
+            <label>Message</label>
             <textarea
               name="message"
               value={formData.message}
               onChange={handleChange}
-              onFocus={() => setFocusedField("message")}
-              onBlur={() => setFocusedField(null)}
-              required
-              rows={5}
-              className="w-full bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 focus:border-orange-500 dark:focus:border-orange-500 outline-none p-3 text-sm text-neutral-900 dark:text-neutral-100 transition-all resize-none placeholder:text-neutral-400 rounded-sm"
               placeholder="Tell me about your project..."
+              required
             />
-          </motion.div>
+          </div>
 
-          <motion.button
-            onClick={handleSubmit}
-            disabled={status === "sending"}
-            whileHover={{ scale: 1.02, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className="w-full group relative px-6 py-3 bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 font-medium text-xs uppercase tracking-wider hover:bg-orange-500 dark:hover:bg-orange-500 dark:hover:text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 overflow-hidden"
-          >
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-orange-500/0 via-orange-500/20 to-orange-500/0"
-              initial={{ x: "-100%" }}
-              animate={{ x: status === "sending" ? "100%" : "-100%" }}
-              transition={{
-                duration: 1,
-                repeat: status === "sending" ? Infinity : 0,
-              }}
-            />
-            {status === "sending" ? (
-              <>
-                <Loader2 size={14} className="animate-spin" />
-                <span>Sending...</span>
-              </>
-            ) : status === "success" ? (
-              <span>Message Sent!</span>
-            ) : status === "error" ? (
-              <span>Try Again</span>
-            ) : (
-              <>
-                <span>Send Message</span>
-                <Send
-                  size={14}
-                  className="group-hover:translate-x-1 transition-transform"
-                />
-              </>
-            )}
-          </motion.button>
+          <button type="submit" className="send-btn" data-magnetic disabled={status === "sending"}>
+            <span>
+              {buttonLabel}
+              {status === "idle" && (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z" /></svg>
+              )}
+            </span>
+          </button>
 
-          {status === "success" && (
-            <motion.p
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-xs text-center text-orange-500"
-            >
-              Thanks for reaching out! I'll respond soon.
-            </motion.p>
-          )}
           {status === "error" && (
-            <motion.p
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-xs text-center text-red-500"
-            >
+            <p className="mt-4 text-center" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: "#ff6b6b", letterSpacing: "0.04em" }}>
               Something went wrong. Please email me directly.
-            </motion.p>
+            </p>
           )}
-        </div>
-      </Reveal>
+        </form>
+      </div>
     </section>
   );
 };

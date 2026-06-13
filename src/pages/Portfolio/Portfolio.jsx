@@ -1,711 +1,693 @@
-import { useState, useEffect } from "react";
-import { motion, useScroll, AnimatePresence } from "framer-motion";
-import {
-  ArrowUpRight,
-  ChevronDown,
-  GraduationCap,
-} from "lucide-react";
-import AskHint from "../../components/AskHint";
+import { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import AskMeAnythingModal from "../../components/AskMeAnythingModal";
 import ContactForm from "../../components/ContactForm";
-import ProjectCard from "../../components/ProjectCard";
-import LatestWorkCard from "../../components/LatestWorkCard";
-import ImageNavOverlay from "../../components/ImageNavOverlay";
-import { Reveal } from "../../components/Reveal";
-import { SectionHeading } from "../../components/SectionHeading";
 import {
   personalInfo,
   experience,
   education,
   projects,
-  skills,
-  portfolioImg,
 } from "../../data/portfolio";
 
-export default function Portfolio() {
-  const [theme, setTheme] = useState("light");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const { scrollYProgress } = useScroll();
+import portraitCream from "../../assets/portrait-cream.png";
+import portraitInk from "../../assets/portrait-ink.png";
 
+/* ─── skill rows for marquee ─── */
+const SKILLS_A = ["Product Management","User Research","Roadmap Planning","A/B Testing","Design Thinking","Decision Models","Product Strategy"];
+const SKILLS_B = ["React","React Native","Node.js","MongoDB","Docker","AWS","CI/CD"];
+const SKILLS_C = ["AI Agents","GPT-4o mini","Gemini AI","Puppeteer","Cloud Infrastructure","Distributed Systems","Shell Scripting"];
+
+/* ─── helper: smooth scroll ─── */
+function scrollTo(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+}
+
+export default function Portfolio() {
+  const [theme, setTheme] = useState("dark");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [scrollProg, setScrollProg] = useState(0);
+  const [openExp, setOpenExp] = useState(0);
+
+  /* ─── theme ─── */
   useEffect(() => {
-    const stored = localStorage.getItem("theme");
-    if (stored) {
-      setTheme(stored);
-    } else {
-      const systemDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-      setTheme(systemDark ? "dark" : "light");
-    }
+    const saved = localStorage.getItem("hg-theme");
+    if (saved) setTheme(saved);
+    else if (window.matchMedia("(prefers-color-scheme: light)").matches) setTheme("light");
   }, []);
 
   useEffect(() => {
     const root = document.documentElement;
-
-    if (theme === "dark") {
-      root.classList.add("dark");
-      root.style.colorScheme = "dark";
-    } else {
-      root.classList.remove("dark");
-      root.style.colorScheme = "light";
-    }
-
-    localStorage.setItem("theme", theme);
+    if (theme === "light") root.classList.add("light");
+    else root.classList.remove("light");
+    localStorage.setItem("hg-theme", theme);
   }, [theme]);
 
+  /* ─── keyboard ─── */
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setIsSearchOpen(true);
-      }
-      if (e.key === "Escape") {
-        setIsSearchOpen(false);
-      }
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); setIsSearchOpen(true); }
+      if (e.key === "Escape") setIsSearchOpen(false);
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  const openAsk = () => {
-    setIsSearchOpen(true);
-  };
+  /* ─── scroll tracking + cinematic aurora parallax ─── */
+  useEffect(() => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const blobs = Array.from(document.querySelectorAll(".aurora span"));
+    // per-blob depth: {speed, direction, sway} — varied so the orange glow
+    // always drifts through the viewport, all the way to the end of the page.
+    const layers = [
+      { speed: 0.16, dir: 1, sway: 40 },   // a1 — orange, drifts down into view
+      { speed: 0.10, dir: -1, sway: 26 },  // a2 — purple, drifts up
+      { speed: 0.22, dir: 1, sway: 34 },   // a3 — orange, deepest layer
+    ];
+    let ticking = false;
+    const apply = () => {
+      const y = window.scrollY;
+      setScrolled(y > 40);
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      setScrollProg(h > 0 ? (y / h) * 100 : 0);
+      if (!reduceMotion) {
+        blobs.forEach((s, i) => {
+          const l = layers[i] || layers[0];
+          const drift = y * l.speed * l.dir;
+          const sway = Math.sin(y / 700 + i * 1.3) * l.sway;
+          s.style.transform = `translate3d(${sway}px, ${drift}px, 0)`;
+        });
+      }
+      ticking = false;
+    };
+    const onScroll = () => {
+      if (!ticking) { ticking = true; requestAnimationFrame(apply); }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    apply();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /* ─── latest work (single item) ─── */
+  const spot = projects[0];
+
+  /* ─── custom cursor ─── */
+  useEffect(() => {
+    if (window.matchMedia("(hover: none)").matches) return;
+    const dot = document.getElementById("cur-dot");
+    const ring = document.getElementById("cur-ring");
+    if (!dot || !ring) return;
+    document.documentElement.classList.add("has-cursor");
+    let rx = 0, ry = 0, dx = 0, dy = 0, shown = false, rafId;
+    const onMove = (e) => {
+      dx = e.clientX; dy = e.clientY;
+      if (!shown) { shown = true; dot.style.opacity = "1"; ring.style.opacity = "1"; }
+      dot.style.transform = `translate(${dx}px,${dy}px) translate(-50%,-50%)`;
+    };
+    const loop = () => {
+      rx += (dx - rx) * 0.18; ry += (dy - ry) * 0.18;
+      ring.style.transform = `translate(${rx}px,${ry}px) translate(-50%,-50%)`;
+      rafId = requestAnimationFrame(loop);
+    };
+    const hov = "a, button, .work-card, .spot-card, .exp-row, input, textarea, .edu-card, .chip, .skill";
+    const overHandler = (e) => { if (e.target.closest(hov)) ring.classList.add("grow"); };
+    const outHandler = (e) => { if (e.target.closest(hov)) ring.classList.remove("grow"); };
+    window.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseover", overHandler);
+    document.addEventListener("mouseout", outHandler);
+    rafId = requestAnimationFrame(loop);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseover", overHandler);
+      document.removeEventListener("mouseout", outHandler);
+      cancelAnimationFrame(rafId);
+      document.documentElement.classList.remove("has-cursor");
+    };
+  }, []);
+
+  /* ─── reveal on scroll ─── */
+  useEffect(() => {
+    const els = document.querySelectorAll("[data-reveal]");
+    const check = () => {
+      const vh = window.innerHeight;
+      els.forEach(el => {
+        const r = el.getBoundingClientRect();
+        if (r.top < vh * 0.9 && r.bottom > 0) el.classList.add("in");
+      });
+    };
+    window.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    check();
+    requestAnimationFrame(check);
+    setTimeout(check, 120);
+    setTimeout(check, 400);
+    return () => { window.removeEventListener("scroll", check); window.removeEventListener("resize", check); };
+  }, []);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-neutral-950 text-neutral-800 dark:text-neutral-300 transition-colors">
-      <style>{`
-        @keyframes marquee {
-          0% { transform: translateX(0%); }
-          100% { transform: translateX(-100%); }
-        }
-        @keyframes marquee2 {
-          0% { transform: translateX(100%); }
-          100% { transform: translateX(0%); }
-        }
-        .animate-marquee {
-          animation: marquee 120s linear infinite;
-        }
-        .animate-marquee2 {
-          animation: marquee2 120s linear infinite;
-        }
-        .dark {
-          color-scheme: dark;
-        }
-      `}</style>
-      <AskHint />
+    <>
+      {/* Background FX */}
+      <div className="aurora" aria-hidden="true"><span className="a1" /><span className="a2" /><span className="a3" /></div>
+      <div className="grain" aria-hidden="true" />
+      <div className="scroll-prog" style={{ width: `${scrollProg}%` }} />
+      <div className="cursor-dot" id="cur-dot" aria-hidden="true" />
+      <div className="cursor-ring" id="cur-ring" aria-hidden="true" />
 
-      <AskMeAnythingModal
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-      />
+      {/* Chat Modal */}
+      <AskMeAnythingModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
-      {/* Progress Line */}
-      <motion.div
-        className="fixed top-0 left-0 h-[1px] bg-orange-500 z-50"
-        style={{ scaleX: scrollYProgress, transformOrigin: "0%" }}
-      />
+      {/* NAV */}
+      <nav
+        className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between transition-all duration-400"
+        style={{
+          padding: scrolled ? "14px 0" : "22px 0",
+          background: scrolled ? "color-mix(in srgb, var(--bg) 72%, transparent)" : "transparent",
+          backdropFilter: scrolled ? "blur(18px) saturate(1.4)" : "none",
+          borderBottom: scrolled ? "1px solid var(--line-soft)" : "1px solid transparent",
+        }}
+      >
+        <div className="w-[min(1280px,92vw)] mx-auto flex items-center justify-between">
+          <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="flex items-center gap-[9px]" style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: 20, letterSpacing: "-0.02em" }}>
+            <span className="w-[9px] h-[9px] rounded-full" style={{ background: "var(--accent)", boxShadow: "0 0 12px var(--accent-glow)" }} />
+            Harsh Gupta.
+          </button>
 
-      {/* Nav */}
-      <nav className="fixed top-0 w-full px-4 py-4 md:px-8 md:py-6 flex justify-between items-center z-40 backdrop-blur-md bg-white/90 dark:bg-neutral-950/90 border-b border-transparent hover:border-neutral-100 dark:hover:border-neutral-900 transition-all">
-        <motion.span
-          className="font-medium text-sm tracking-tight text-neutral-900 dark:text-neutral-100 cursor-pointer"
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        >
-          Harsh Gupta<span className="text-orange-500">.</span>
-        </motion.span>
-        <div className="flex items-center gap-4 md:gap-8">
-          <motion.div
-            className="flex items-center gap-3 md:gap-6 text-[11px] font-mono uppercase tracking-wider text-neutral-500 dark:text-neutral-400"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            {[
-              { name: "Experience", id: "experience", short: "Exp" },
-              { name: "Education", id: "education", short: "Edu" },
-              { name: "Skills", id: "skills", short: "Skills" },
-              { name: "Work", id: "work", short: "Work" },
-              { name: "Contact", id: "contact", short: "Contact" },
-            ].map((item, i) => (
-              <motion.button
-                key={item.id}
-                onClick={() => {
-                  document.getElementById(item.id)?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  });
-                }}
-                className="hover:text-orange-500 transition-colors relative group"
-                whileHover={{ y: -2 }}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
+          <div className="hidden md:flex items-center gap-1">
+            {["experience","education","skills","work","contact"].map(id => (
+              <button key={id} onClick={() => scrollTo(id)}
+                className="relative group px-[14px] py-2 rounded-full transition-colors duration-250"
+                style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: "11.5px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink-dim)" }}
               >
-                <span className="hidden sm:inline">{item.name}</span>
-                <span className="sm:hidden">{item.short}</span>
-                <motion.span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-orange-500 group-hover:w-full transition-all duration-300" />
-              </motion.button>
+                <span className="group-hover:text-[var(--ink)] transition-colors">{id}</span>
+                <span className="absolute left-[14px] right-[14px] bottom-1 h-px origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300" style={{ background: "var(--accent)" }} />
+              </button>
             ))}
-          </motion.div>
+          </div>
+
+          <div className="flex items-center gap-[10px]">
+            <button onClick={() => setTheme(t => t === "dark" ? "light" : "dark")}
+              className="w-10 h-10 rounded-full grid place-items-center transition-all duration-250"
+              style={{ border: "1px solid var(--line)", background: "var(--surface)" }}
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              )}
+            </button>
+
+            <button onClick={() => setIsSearchOpen(true)}
+              className="flex items-center gap-2 px-[18px] py-[10px] rounded-full font-semibold transition-all duration-300"
+              style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, letterSpacing: "0.05em", background: "var(--ink)", color: "var(--bg)" }}
+            >
+              <span className="w-[7px] h-[7px] rounded-full" style={{ background: "var(--accent)", animation: "pulse 1.8s infinite" }} />
+              Chat
+            </button>
+          </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="min-h-screen flex flex-col justify-center px-5 md:px-20 max-w-6xl mx-auto relative py-20 pt-24 md:pt-20">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-8 lg:gap-12 items-center">
-          <div className="space-y-6 md:space-y-8">
-            <Reveal>
-              <div className="flex items-center gap-3">
-                <p className="text-[10px] font-mono text-neutral-400 dark:text-neutral-500 tracking-[0.25em]">
-                  {personalInfo.location.toUpperCase()}
-                </p>
-                {personalInfo.openToWork && (
-                  <motion.span
-                    className="flex items-center gap-1.5 text-[10px] font-mono text-orange-500 tracking-wider"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    <motion.span
-                      className="w-1.5 h-1.5 bg-orange-500 rounded-full"
-                      animate={{ opacity: [1, 0.3, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                    OPEN TO WORK
-                  </motion.span>
-                )}
-              </div>
-            </Reveal>
-
-            <Reveal delay={0.1}>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light tracking-tight leading-[1.15] text-neutral-900 dark:text-neutral-100">
-                Crafting digital <br />
-                <span className="font-serif italic text-neutral-500 dark:text-neutral-400">
-                  experiences
-                </span>{" "}
-                with <br />
-                intelligence & precision
-                <span className="text-orange-500">.</span>
-              </h1>
-            </Reveal>
-
-            <Reveal delay={0.2}>
-              <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-lg leading-relaxed">
-                {personalInfo.bio.slice(0, personalInfo.bioHighlight.start)}
-                <span className="text-orange-500 font-medium">
-                  {personalInfo.bioHighlight.text}
+      {/* HERO */}
+      <header className="min-h-screen flex items-center relative z-[2] pt-32 pb-20 md:pt-[150px] md:pb-20" id="top">
+        <div className="w-[min(1280px,92vw)] mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] gap-14 items-center w-full">
+            {/* Left */}
+            <div>
+              <div className="inline-flex items-center gap-[14px] mb-[30px]" data-reveal>
+                <span className="inline-flex items-center gap-[9px] px-[14px] py-[7px] rounded-full"
+                  style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", border: "1px solid var(--line)", color: "var(--ink-dim)" }}
+                >
+                  <span className="w-[7px] h-[7px] rounded-full" style={{ background: "#46d17f", animation: "pulse2 2s infinite" }} />
+                  Open to work
                 </span>
+                <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.18em", color: "var(--ink-faint)" }}>
+                  {personalInfo.location.toUpperCase()}
+                </span>
+              </div>
+
+              <h1 data-reveal style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 600, lineHeight: 1.04, letterSpacing: "-0.015em", fontSize: "clamp(32px, 4.4vw, 60px)", marginBottom: 26 }}>
+                <span className="block overflow-hidden"><span className="inline-block">Crafting digital</span></span>
+                <span className="block overflow-hidden"><span className="inline-block">experiences with</span></span>
+                <span className="block overflow-hidden"><span className="inline-block"><em style={{ color: "var(--accent)", fontStyle: "normal" }}>intelligence</em> &amp;</span></span>
+                <span className="block overflow-hidden"><span className="inline-block" style={{ color: "var(--ink)" }}>precision.</span></span>
+              </h1>
+
+              <p data-reveal className="max-w-[52ch] mb-[26px]" style={{ color: "var(--ink-dim)", fontSize: "14.5px", lineHeight: 1.7 }}>
+                {personalInfo.bio.slice(0, personalInfo.bioHighlight.start)}
+                <b style={{ color: "var(--ink)", fontWeight: 600 }}>{personalInfo.bioHighlight.text}</b>
                 {personalInfo.bio.slice(personalInfo.bioHighlight.end)}
               </p>
-            </Reveal>
 
-            <Reveal delay={0.25}>
-              <div className="space-y-3">
-                <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500">
-                  Interested in
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {personalInfo.interests.map((interest, i) => (
-                    <motion.span
-                      key={i}
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      className="px-3 py-1.5 text-[11px] border border-neutral-200 dark:border-neutral-800 text-neutral-700 dark:text-neutral-400 hover:border-orange-500 dark:hover:border-orange-500 hover:text-orange-500 transition-colors cursor-default"
-                    >
-                      {interest}
-                    </motion.span>
-                  ))}
-                </div>
-              </div>
-            </Reveal>
-
-            <Reveal delay={0.3}>
-              <div className="flex items-center gap-6 pt-3 text-[11px] font-medium tracking-wide">
-                <motion.a
-                  href={`mailto:${personalInfo.email}`}
-                  className="group flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 hover:text-orange-500 transition-colors"
-                  whileHover={{ x: 3 }}
-                >
-                  <span>EMAIL</span>
-                  <ArrowUpRight
-                    size={11}
-                    className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
-                  />
-                </motion.a>
-                <motion.a
-                  href={personalInfo.socials.github}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 hover:text-orange-500 transition-colors"
-                  whileHover={{ x: 3 }}
-                >
-                  <span>GITHUB</span>
-                  <ArrowUpRight
-                    size={11}
-                    className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
-                  />
-                </motion.a>
-                <motion.a
-                  href={personalInfo.socials.youtube}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 hover:text-orange-500 transition-colors"
-                  whileHover={{ x: 3 }}
-                >
-                  <span>YOUTUBE</span>
-                  <ArrowUpRight
-                    size={11}
-                    className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
-                  />
-                </motion.a>
-                <motion.a
-                  href={personalInfo.socials.gallery}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 hover:text-orange-500 transition-colors"
-                  whileHover={{ x: 3 }}
-                >
-                  <span>GALLERY</span>
-                  <ArrowUpRight
-                    size={11}
-                    className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
-                  />
-                </motion.a>
-                <motion.a
-                  href={personalInfo.socials.resume}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-1.5 text-neutral-500 dark:text-neutral-400 hover:text-orange-500 transition-colors"
-                  whileHover={{ x: 3 }}
-                >
-                  <span>RESUME</span>
-                  <ArrowUpRight
-                    size={11}
-                    className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
-                  />
-                </motion.a>
-              </div>
-            </Reveal>
-          </div>
-
-          {/* Profile Image with Search Button */}
-          <Reveal delay={0.35}>
-            <div className="relative order-first lg:order-last mt-8 lg:mt-0 group">
-              <motion.div
-                className="relative"
-                whileHover={{ scale: 1.01 }}
-                transition={{ duration: 0.4 }}
-              >
-                <div className="aspect-[3/4] relative overflow-hidden">
-                  <img
-                    src={portfolioImg}
-                    alt="Harsh Gupta"
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-
-                  <motion.div
-                    className="absolute top-0 right-0 w-24 h-24 bg-orange-500/10 blur-2xl pointer-events-none"
-                    animate={{
-                      scale: [1, 1.2, 1],
-                      opacity: [0.1, 0.2, 0.1],
-                    }}
-                    transition={{ duration: 4, repeat: Infinity }}
-                  />
-                  <motion.div
-                    className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/10 blur-2xl pointer-events-none"
-                    animate={{
-                      scale: [1, 1.3, 1],
-                      opacity: [0.1, 0.2, 0.1],
-                    }}
-                    transition={{ duration: 5, repeat: Infinity, delay: 1 }}
-                  />
-
-                  <ImageNavOverlay onAskClick={openAsk} />
-                </div>
-
-                <div className="absolute -bottom-3 -right-3 w-full h-full border border-orange-500/20 dark:border-orange-500/30 -z-10"></div>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.55, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-                className="mt-5"
-              >
-                <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500 mb-2">
-                  Latest Work
-                </p>
-                <LatestWorkCard />
-              </motion.div>
-            </div>
-          </Reveal>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1, duration: 1 }}
-          className="absolute bottom-10 left-5 md:left-20 hidden sm:block"
-        >
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            <ChevronDown
-              size={16}
-              className="text-neutral-300 dark:text-neutral-700"
-            />
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* Experience */}
-      <section
-        id="experience"
-        className="py-20 md:py-24 px-5 md:px-20 max-w-5xl mx-auto"
-      >
-        <Reveal>
-          <SectionHeading>Selected Experience</SectionHeading>
-        </Reveal>
-
-        <div className="space-y-8 md:space-y-10">
-          {experience.map((job, i) => (
-            <Reveal key={i} delay={i * 0.1}>
-              <motion.div
-                className="group relative"
-                whileHover={{ y: -4 }}
-                transition={{ duration: 0.3 }}
-              >
-                <div className="relative bg-white dark:bg-neutral-900/50 border border-neutral-100 dark:border-neutral-800 hover:border-neutral-200 dark:hover:border-neutral-200 transition-all duration-300 p-5 md:p-6">
-                  <div className="flex items-start gap-4 mb-5">
-                    <motion.div
-                      className="w-12 h-12 md:w-14 md:h-14 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300 overflow-hidden p-2"
-                      whileHover={{ rotate: 5 }}
-                    >
-                      {job.logo.includes("/") ? (
-                        <img
-                          src={job.logo}
-                          alt={`${job.company} logo`}
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.style.display = "none";
-                            e.target.nextSibling.style.display = "block";
-                          }}
-                        />
-                      ) : null}
-                      <span
-                        className={`text-base md:text-lg font-bold text-orange-500 ${
-                          job.logo.includes("/") ? "hidden" : "block"
-                        }`}
-                      >
-                        {job.logo.includes("/")
-                          ? job.company.charAt(0)
-                          : job.logo}
-                      </span>
-                    </motion.div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-1">
-                        <h3 className="text-lg md:text-xl font-semibold text-neutral-900 dark:text-neutral-100 group-hover:text-orange-500 transition-colors">
-                          {job.company}
-                        </h3>
-                        <div className="flex items-center gap-2 text-[11px] font-mono text-neutral-400 dark:text-neutral-500">
-                          <span>{job.startDate}</span>
-                          <span>—</span>
-                          <span
-                            className={
-                              job.endDate === "Present" ? "text-orange-500" : ""
-                            }
-                          >
-                            {job.endDate}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium">
-                        {job.role}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2.5 pl-0 md:pl-[4.5rem]">
-                    {job.highlights.map((highlight, idx) => (
-                      <motion.div
-                        key={idx}
-                        className="flex items-start gap-3 group/item"
-                        initial={{ opacity: 0, x: -10 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.1 + idx * 0.05 }}
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500/60 group-hover/item:bg-orange-500 flex-shrink-0 mt-1.5 transition-colors" />
-                        <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed group-hover/item:text-neutral-900 dark:group-hover/item:text-neutral-300 transition-colors">
-                          {highlight}
-                        </p>
-                      </motion.div>
-                    ))}
-                  </div>
-                </div>
-
-                <motion.div
-                  className="absolute left-0 top-0 w-1 h-0 bg-gradient-to-b from-orange-500 to-orange-500/0 group-hover:h-full transition-all duration-500"
-                  initial={{ height: 0 }}
-                />
-              </motion.div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Education */}
-      <section
-        id="education"
-        className="py-16 md:py-20 px-5 md:px-20 max-w-5xl mx-auto"
-      >
-        <Reveal>
-          <div className="flex items-center gap-4 mb-10">
-            <SectionHeading>Academic Background</SectionHeading>
-            <div className="h-[1px] bg-neutral-200 dark:bg-neutral-800 flex-1 mb-6"></div>
-          </div>
-        </Reveal>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {education.map((edu, i) => (
-            <Reveal key={i} delay={i * 0.1}>
-              <motion.div
-                className="group h-full bg-neutral-50 dark:bg-neutral-900/30 border border-neutral-100 dark:border-neutral-800 p-6 hover:border-orange-500/30 transition-colors"
-                whileHover={{ y: -5 }}
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="bg-white dark:bg-neutral-800 p-3 rounded-full shadow-sm">
-                    <GraduationCap size={20} className="text-orange-500" />
-                  </div>
-                  <span className="text-[11px] font-mono text-neutral-400 dark:text-neutral-500 bg-white dark:bg-neutral-900 px-2 py-1 rounded border border-neutral-100 dark:border-neutral-800">
-                    {edu.year}
+              <div className="flex flex-wrap gap-[10px] mb-[34px]" data-reveal>
+                {personalInfo.interests.map(interest => (
+                  <span key={interest} className="chip px-[15px] py-2 rounded-full cursor-default transition-all duration-300 hover:-translate-y-0.5"
+                    style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", border: "1px solid var(--line)", color: "var(--ink-dim)" }}
+                    onMouseEnter={e => { e.currentTarget.style.color = "var(--bg)"; e.currentTarget.style.background = "var(--accent)"; e.currentTarget.style.borderColor = "var(--accent)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.color = "var(--ink-dim)"; e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "var(--line)"; }}
+                  >
+                    {interest}
                   </span>
-                </div>
-
-                <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-1 group-hover:text-orange-500 transition-colors">
-                  {edu.school}
-                </h3>
-                <p className="text-sm text-neutral-500 dark:text-neutral-400 font-medium mb-4">
-                  {edu.degree}
-                </p>
-                <p className="text-xs leading-relaxed text-neutral-600 dark:text-neutral-400 border-t border-dashed border-neutral-200 dark:border-neutral-800 pt-4">
-                  {edu.desc}
-                </p>
-              </motion.div>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* Technical Arsenal */}
-      <section
-        id="skills"
-        className="py-16 md:py-20 overflow-hidden bg-neutral-50 dark:bg-neutral-900/50"
-      >
-        <div className="max-w-4xl mx-auto px-5 md:px-20 mb-10 md:mb-12">
-          <SectionHeading>Technical Arsenal</SectionHeading>
-        </div>
-
-        <div className="relative flex overflow-x-hidden">
-          <div className="animate-marquee whitespace-nowrap flex gap-8 md:gap-12 px-6">
-            {[...skills, ...skills, ...skills].map((skill, i) => (
-              <motion.span
-                key={i}
-                className="text-3xl md:text-4xl lg:text-5xl font-serif italic text-neutral-300 dark:text-neutral-700 hover:text-orange-500 dark:hover:text-orange-500 transition-colors cursor-default duration-500"
-                whileHover={{ scale: 1.1, y: -4 }}
-              >
-                {skill}
-              </motion.span>
-            ))}
-          </div>
-
-          <div className="absolute top-0 animate-marquee2 whitespace-nowrap flex gap-8 md:gap-12 px-6">
-            {[...skills, ...skills, ...skills].map((skill, i) => (
-              <motion.span
-                key={`dup-${i}`}
-                className="text-3xl md:text-4xl lg:text-5xl font-serif italic text-neutral-300 dark:text-neutral-700 hover:text-orange-500 dark:hover:text-orange-500 transition-colors cursor-default duration-500"
-                whileHover={{ scale: 1.1, y: -4 }}
-              >
-                {skill}
-              </motion.span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Projects */}
-      <section
-        id="work"
-        className="py-12 md:py-16 px-5 md:px-20 max-w-6xl mx-auto"
-      >
-        <Reveal>
-          <div className="flex items-baseline justify-between mb-8 border-b border-neutral-200 dark:border-neutral-800 pb-2">
-            <SectionHeading>Selected Works</SectionHeading>
-            <span className="text-[10px] font-mono text-neutral-400">
-              01 — {projects.length.toString().padStart(2, "0")}
-            </span>
-          </div>
-        </Reveal>
-
-        <div className="space-y-8 md:space-y-12">
-          {projects.map((project, i) => (
-            <Reveal key={i} delay={i * 0.08}>
-              <ProjectCard project={project} i={i}>
-
-                <motion.div
-                  className={`flex flex-col ${
-                    i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
-                  } gap-4 md:gap-8 items-center`}
-                  whileHover={{ y: -2 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <div className="md:w-[45%] relative overflow-hidden rounded-md">
-                    <div className="aspect-[16/9] relative overflow-hidden bg-neutral-100 dark:bg-neutral-900">
-                      <img
-                        src={project.image}
-                        alt={project.title}
-                        className="absolute inset-0 w-full h-full object-cover object-center transition-all duration-500 group-hover:scale-105"
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                          e.target.nextSibling.style.display = "flex";
-                        }}
-                      />
-                      <div className="hidden w-full h-full items-center justify-center bg-neutral-50 dark:bg-neutral-800 text-neutral-400 text-sm absolute inset-0">
-                        {project.title}
-                      </div>
-
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                      <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-white/90 dark:bg-neutral-900/90 backdrop-blur-sm px-2.5 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-                        <span className="text-[9px] font-mono uppercase tracking-wide text-neutral-700 dark:text-neutral-300">
-                          View
-                        </span>
-                        <ArrowUpRight size={10} className="text-orange-500" />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="md:w-[55%] flex flex-col justify-center">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-[9px] font-mono text-orange-500">
-                        {(i + 1).toString().padStart(2, "0")}
-                      </span>
-                      <div className="h-px w-8 bg-neutral-200 dark:bg-neutral-800" />
-                      <span className="text-[9px] font-mono uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-                        {project.tech}
-                      </span>
-                    </div>
-
-                    <h3 className="text-xl md:text-2xl font-serif text-neutral-900 dark:text-neutral-100 group-hover:text-orange-500 transition-colors duration-300">
-                      {project.title}
-                    </h3>
-                    <p className="text-xs font-mono text-neutral-500 dark:text-neutral-400 mb-2">
-                      {project.tagline}
-                    </p>
-
-                    <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed mb-3 line-clamp-2 md:line-clamp-none">
-                      {project.desc}
-                    </p>
-
-                    <div className="space-y-1 mb-3">
-                      {project.highlights.slice(0, 2).map((highlight, idx) => (
-                        <div key={idx} className="flex items-start gap-2">
-                          <span className="w-1 h-1 rounded-full bg-orange-500 mt-1.5 flex-shrink-0" />
-                          <span className="text-[11px] text-neutral-500 dark:text-neutral-400 line-clamp-1">
-                            {highlight}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="text-[8px] font-mono uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-                        Role:
-                      </span>
-                      <span className="text-[9px] font-mono uppercase tracking-wide text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded">
-                        {project.role}
-                      </span>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {i < projects.length - 1 && (
-                  <div className="mt-8 md:mt-12 h-px w-full bg-gradient-to-r from-transparent via-neutral-200 dark:via-neutral-800 to-transparent" />
-                )}
-              </ProjectCard>
-            </Reveal>
-          ))}
-        </div>
-
-        <Reveal delay={0.2}>
-          <div className="mt-10 md:mt-14 pt-6 border-t border-neutral-200 dark:border-neutral-800">
-            <a
-              href="https://github.com/TabsOverSpaces4"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group flex items-center justify-between p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:border-orange-500/50 dark:hover:border-orange-500/50 transition-all duration-300 hover:bg-neutral-50 dark:hover:bg-neutral-900/50"
-            >
-              <div>
-                <h4 className="text-base font-serif text-neutral-900 dark:text-neutral-100 group-hover:text-orange-500 transition-colors">
-                  Explore More on GitHub
-                </h4>
-                <p className="text-[10px] text-neutral-500 dark:text-neutral-400">
-                  Discover repositories, contributions, and experiments
-                </p>
+                ))}
               </div>
-              <div className="flex items-center gap-2 text-neutral-400 group-hover:text-orange-500 transition-colors">
-                <span className="text-[9px] font-mono uppercase tracking-wider hidden sm:inline">
-                  View Profile
+
+              <div className="flex flex-wrap gap-[26px]" data-reveal>
+                {[
+                  { label: "Email", href: `mailto:${personalInfo.email}`, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg> },
+                  { label: "GitHub", href: personalInfo.socials.github, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.6 1.03 2.69 0 3.84-2.34 4.69-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg> },
+                  { label: "YouTube", href: personalInfo.socials.youtube, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="m10 9 5 3-5 3z" fill="currentColor"/></svg> },
+                  { label: "Gallery", href: personalInfo.socials.gallery, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg> },
+                  { label: "Resume", href: personalInfo.socials.resume, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> },
+                ].map(s => (
+                  <a key={s.label} href={s.href} target={s.label === "Email" ? undefined : "_blank"} rel="noopener noreferrer"
+                    className="inline-flex items-center gap-[7px] transition-colors duration-250 group"
+                    style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-dim)" }}
+                    onMouseEnter={e => e.currentTarget.style.color = "var(--accent)"}
+                    onMouseLeave={e => e.currentTarget.style.color = "var(--ink-dim)"}
+                  >
+                    <span className="opacity-70 group-hover:opacity-100 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5">{s.icon}</span>
+                    {s.label}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Right — Spotlight */}
+            <div className="relative">
+              {/* Portrait background */}
+              <div className="absolute w-[86%] right-[-14%] top-[-4%] opacity-[0.16] z-0 pointer-events-none hidden lg:block"
+                style={{ backgroundImage: `url(${theme === "light" ? portraitInk : portraitCream})`, backgroundRepeat: "no-repeat", backgroundPosition: "center top", backgroundSize: "contain", aspectRatio: "864/1153" }}
+              />
+
+              {/* Spotlight card */}
+              <div className="relative z-[2]" style={{ perspective: 1000 }} data-reveal>
+                <SpotlightCard spot={spot} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* EXPERIENCE */}
+      <section className="relative z-[2] py-[56px] md:py-[88px]" id="experience">
+        <div className="w-[min(1280px,92vw)] mx-auto">
+          <SectionHead eyebrow="Selected Experience" title={<>Where I've built<br/>and shipped.</>} num={`0${experience.length} ROLES · 2021—2025`} />
+          <div style={{ borderTop: "1px solid var(--line)" }}>
+            {experience.map((job, i) => (
+              <div key={i}
+                className="exp-row grid gap-7 relative cursor-pointer transition-all duration-400"
+                style={{
+                  gridTemplateColumns: "52px 1fr auto",
+                  padding: "26px 8px",
+                  borderBottom: "1px solid var(--line)",
+                  paddingLeft: openExp === i ? 22 : 8,
+                  background: openExp === i ? "var(--surface)" : "transparent",
+                }}
+                data-reveal
+                onClick={() => setOpenExp(openExp === i ? -1 : i)}
+              >
+                <span className="absolute left-0 top-0 bottom-0 w-[2px] origin-top transition-transform duration-400" style={{ background: "var(--accent)", transform: openExp === i ? "scaleY(1)" : "scaleY(0)" }} />
+                <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 13, color: openExp === i ? "var(--accent)" : "var(--ink-faint)", paddingTop: 6, transition: "color .4s" }}>
+                  {(i + 1).toString().padStart(2, "0")}
                 </span>
-                <ArrowUpRight
-                  size={14}
-                  className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform"
-                />
+                <div className="flex flex-col gap-1">
+                  <h3 style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: "clamp(19px, 2.2vw, 26px)", letterSpacing: "-0.02em" }}>
+                    {job.company}
+                  </h3>
+                  <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, letterSpacing: "0.08em", color: "var(--ink-dim)", textTransform: "uppercase" }}>
+                    {job.role}
+                  </span>
+                  <div className="transition-all duration-500 overflow-hidden" style={{ maxHeight: openExp === i ? 320 : 0, marginTop: openExp === i ? 14 : 0, opacity: openExp === i ? 1 : 0 }}>
+                    <ul className="flex flex-col gap-[9px]" style={{ listStyle: "none" }}>
+                      {job.highlights.map((pt, j) => (
+                        <li key={j} className="relative pl-5" style={{ color: "var(--ink-dim)", fontSize: "13px", lineHeight: 1.55 }}>
+                          <span className="absolute left-0" style={{ color: "var(--accent)" }}>→</span>
+                          {pt}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+                <span className="hidden sm:block whitespace-nowrap pt-1.5" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, color: "var(--ink-faint)", letterSpacing: "0.04em" }}>
+                  {job.startDate.toUpperCase()} — {job.endDate.toUpperCase()}
+                </span>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* EDUCATION */}
+      <section className="relative z-[2] py-[56px] md:py-[88px]" id="education">
+        <div className="w-[min(1280px,92vw)] mx-auto">
+          <SectionHead eyebrow="Academic Background" title={<>Sharpening the<br/>product edge.</>} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {education.map((edu, i) => (
+              <div key={i} className="edu-card relative overflow-hidden rounded-[20px] p-7 md:p-[38px] transition-all duration-400 hover:-translate-y-1.5"
+                style={{ border: "1px solid var(--line)", background: "var(--surface)" }}
+                data-reveal
+                onMouseEnter={e => e.currentTarget.style.borderColor = "var(--accent)"}
+                onMouseLeave={e => e.currentTarget.style.borderColor = "var(--line)"}
+              >
+                <span className="absolute right-[-10px] bottom-[-26px]" style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: 105, color: "var(--ink)", opacity: 0.04 }}>
+                  {(i + 1).toString().padStart(2, "0")}
+                </span>
+                <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: "var(--ink-dim)", letterSpacing: "0.1em" }}>{edu.year.toUpperCase()}</span>
+                <h3 className="mt-3.5 mb-1.5" style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: 22, letterSpacing: "-0.02em" }}>{edu.school}</h3>
+                <div className="mb-2.5" style={{ color: "var(--ink)", fontSize: 14.5, fontWeight: 600 }}>{edu.degree}</div>
+                <p style={{ color: "var(--ink-dim)", fontSize: "13px", lineHeight: 1.6 }}>{edu.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SKILLS */}
+      <section className="relative z-[2] py-[56px] md:py-[88px]" id="skills">
+        <div className="w-[min(1280px,92vw)] mx-auto">
+          <SectionHead eyebrow="Technical Arsenal" title={<>The tools of<br/>the trade.</>} />
+        </div>
+        <div className="flex flex-col gap-2" data-reveal>
+          {[SKILLS_A, SKILLS_B, SKILLS_C].map((row, ri) => (
+            <MarqueeRow key={ri} items={row} dur={32 + ri * 7} reverse={ri % 2 === 1} />
+          ))}
+        </div>
+      </section>
+
+      {/* WORKS */}
+      <section className="relative z-[2] py-[56px] md:py-[88px]" id="work">
+        <div className="w-[min(1280px,92vw)] mx-auto">
+          <SectionHead eyebrow="Selected Works" title={<>Things I've<br/>made &amp; shipped.</>} num={`01 — ${projects.length.toString().padStart(2, "0")}`} />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {projects.map((project, i) => (
+              <WorkCard key={i} project={project} index={i} />
+            ))}
+          </div>
+
+          {/* GitHub CTA */}
+          <div className="mt-[30px] rounded-[24px] p-8 md:p-14 relative overflow-hidden flex flex-wrap items-center justify-between gap-[30px]"
+            style={{ border: "1px solid var(--line)", background: "var(--surface)" }}
+            data-reveal
+          >
+            <div className="absolute inset-0 opacity-40 pointer-events-none"
+              style={{
+                backgroundImage: "linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px)",
+                backgroundSize: "40px 40px",
+                WebkitMask: "radial-gradient(circle at 80% 50%, #000, transparent 70%)",
+              }}
+            />
+            <div className="relative">
+              <h3 style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: "clamp(22px, 2.8vw, 34px)", letterSpacing: "-0.025em" }}>
+                Explore more on GitHub
+              </h3>
+              <p className="mt-2" style={{ color: "var(--ink-dim)", fontSize: 14 }}>Discover repositories, contributions, and experiments.</p>
+            </div>
+            <a href={personalInfo.socials.github} target="_blank" rel="noopener noreferrer"
+              className="relative inline-flex items-center gap-3 px-[24px] py-[14px] rounded-full font-semibold transition-transform duration-300"
+              style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", background: "var(--ink)", color: "var(--bg)" }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.6 1.03 2.69 0 3.84-2.34 4.69-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>
+              View Profile
             </a>
           </div>
-        </Reveal>
+        </div>
       </section>
 
-      {/* Contact Form */}
+      {/* CONTACT */}
       <ContactForm />
 
-      {/* Footer */}
-      <footer className="py-8 md:py-10 px-5 md:px-20 border-t border-neutral-100 dark:border-neutral-900 flex flex-col md:flex-row justify-between items-center gap-4 text-[10px] uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-500">
-        <p>© 2025 Harsh Gupta</p>
-        <div className="flex gap-5 md:gap-6">
-          <motion.a
-            href="https://www.linkedin.com/in/harshguptaworks/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-orange-500 transition-colors"
-            whileHover={{ y: -2 }}
-          >
-            LinkedIn
-          </motion.a>
-          <motion.a
-            href={personalInfo.socials.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-orange-500 transition-colors"
-            whileHover={{ y: -2 }}
-          >
-            GitHub
-          </motion.a>
-          <motion.a
-            href={`mailto:${personalInfo.email}`}
-            className="hover:text-orange-500 transition-colors"
-            whileHover={{ y: -2 }}
-          >
-            Email
-          </motion.a>
+      {/* FOOTER */}
+      <footer className="relative">
+        <div className="text-center select-none" aria-hidden="true"
+          style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: "clamp(60px, 17vw, 280px)", letterSpacing: "-0.04em", lineHeight: 0.8, color: "var(--ink)", opacity: 0.045, padding: "30px 0 10px" }}
+        >
+          HARSH GUPTA
+        </div>
+        <div className="w-[min(1280px,92vw)] mx-auto">
+          <div className="flex flex-wrap items-center justify-between gap-[18px] relative z-[2]" style={{ padding: "50px 0 40px", borderTop: "1px solid var(--line)" }}>
+            <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, letterSpacing: "0.16em", color: "var(--ink-faint)", textTransform: "uppercase" }}>
+              © 2025 Harsh Gupta
+            </span>
+            <div className="flex gap-6">
+              {[
+                { label: "LinkedIn", href: personalInfo.socials.linkedin },
+                { label: "GitHub", href: personalInfo.socials.github },
+                { label: "Email", href: `mailto:${personalInfo.email}` },
+              ].map(l => (
+                <a key={l.label} href={l.href} target={l.label === "Email" ? undefined : "_blank"} rel="noopener noreferrer"
+                  className="transition-colors duration-250"
+                  style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, letterSpacing: "0.12em", color: "var(--ink-dim)", textTransform: "uppercase" }}
+                  onMouseEnter={e => e.currentTarget.style.color = "var(--accent)"}
+                  onMouseLeave={e => e.currentTarget.style.color = "var(--ink-dim)"}
+                >
+                  {l.label}
+                </a>
+              ))}
+            </div>
+          </div>
         </div>
       </footer>
+    </>
+  );
+}
+
+/* ─── Section Head ─── */
+function SectionHead({ eyebrow, title, num }) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-[24px] mb-10">
+      <div>
+        <span data-reveal className="inline-flex items-center gap-3 mb-3"
+          style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.28em", textTransform: "uppercase", color: "var(--ink-dim)" }}
+        >
+          <span className="w-[22px] h-px opacity-80" style={{ background: "var(--accent)" }} />
+          {eyebrow}
+        </span>
+        <h2 data-reveal style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: "clamp(26px, 3.6vw, 46px)", letterSpacing: "-0.03em", lineHeight: 1.0 }}>
+          {title}
+        </h2>
+      </div>
+      {num && (
+        <span data-reveal style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: "var(--ink-faint)", letterSpacing: "0.1em" }}>
+          {num}
+        </span>
+      )}
     </div>
+  );
+}
+
+/* ─── Spotlight Card ─── */
+function SpotlightCard({ spot }) {
+  const cardRef = useRef(null);
+
+  const handleMouseMove = (e) => {
+    const card = cardRef.current;
+    if (!card) return;
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    const rx = (0.5 - py) * 9;
+    const ry = (px - 0.5) * 11;
+    card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg) translateY(-4px)`;
+    card.style.setProperty("--mx", (px * 100) + "%");
+    card.style.setProperty("--my", (py * 100) + "%");
+  };
+
+  const handleMouseLeave = () => {
+    if (cardRef.current) cardRef.current.style.transform = "perspective(900px) rotateX(0) rotateY(0)";
+  };
+
+  return (
+    <div ref={cardRef}
+      className="spot-card relative rounded-[18px] p-[20px] transition-transform duration-150"
+      style={{
+        background: "var(--card)", border: "1px solid var(--card-brd)", boxShadow: "var(--shadow)",
+        backdropFilter: "blur(20px)", transformStyle: "preserve-3d", willChange: "transform",
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* gradient border */}
+      <div className="absolute inset-0 rounded-[22px] pointer-events-none opacity-50"
+        style={{
+          padding: 1,
+          background: "linear-gradient(140deg, var(--accent), transparent 40%, transparent 70%, var(--accent-2))",
+          WebkitMask: "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+          WebkitMaskComposite: "xor",
+          maskComposite: "exclude",
+        }}
+      />
+
+      <div className="flex items-center justify-between mb-[18px]" style={{ transform: "translateZ(40px)" }}>
+        <span className="flex items-center gap-2 whitespace-nowrap" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: "10.5px", letterSpacing: "0.2em", color: "var(--accent)" }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--accent)", animation: "pulse 1.6s infinite" }} />
+          Latest Drop
+        </span>
+        <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, color: "var(--ink-faint)", letterSpacing: "0.12em" }}>
+          {spot.role.toUpperCase()}
+        </span>
+      </div>
+
+      <div style={{ transform: "translateZ(20px)" }}>
+        <div className="relative rounded-[14px] overflow-hidden mb-5"
+          style={{ aspectRatio: "16/10", background: "linear-gradient(150deg, var(--bg-3), var(--bg-2))", border: "1px solid var(--line-soft)" }}
+        >
+          {spot.image && (
+            <img src={spot.image} alt={spot.title} loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover" />
+          )}
+          <div className="absolute inset-0 pointer-events-none"
+            style={{ background: "linear-gradient(to top, rgba(10,9,8,0.72), transparent 55%)" }}
+          />
+          <span className="absolute left-[14px] bottom-3 whitespace-nowrap z-[1]" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 10, letterSpacing: "0.14em", color: "#f4eee2" }}>
+            {spot.tech.toUpperCase()}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ transform: "translateZ(30px)" }}>
+        <h3 className="mb-1" style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: 23, letterSpacing: "-0.02em" }}>{spot.title}</h3>
+        <p style={{ color: "var(--ink-dim)", fontSize: 13, lineHeight: 1.55 }}>{spot.tagline}</p>
+      </div>
+
+      <div className="flex items-center justify-end mt-5" style={{ transform: "translateZ(30px)" }}>
+        <button onClick={() => scrollTo("work")}
+          className="inline-flex items-center gap-2 group"
+          style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink)" }}
+        >
+          View work
+          <svg className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17 17 7M9 7h8v8"/></svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Marquee Row ─── */
+function MarqueeRow({ items, dur, reverse }) {
+  const set = items.map((s, i) => (
+    <span key={i} className="skill inline-flex items-center gap-[16px] whitespace-nowrap transition-colors duration-300 cursor-default"
+      style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 600, fontSize: "clamp(18px, 2.4vw, 30px)", letterSpacing: "-0.02em", color: "var(--ink-faint)" }}
+      onMouseEnter={e => e.currentTarget.style.color = "var(--accent)"}
+      onMouseLeave={e => e.currentTarget.style.color = "var(--ink-faint)"}
+    >
+      {s}<span style={{ fontSize: "0.5em", color: "var(--ink-faint)" }}>✦</span>
+    </span>
+  ));
+
+  return (
+    <div className="overflow-hidden group"
+      style={{ WebkitMask: "linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)" }}
+    >
+      <div className="flex gap-[18px] w-max group-hover:[animation-play-state:paused]"
+        style={{ animation: `marq ${dur}s linear infinite${reverse ? " reverse" : ""}` }}
+      >
+        {set}{set}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Work Card ─── */
+function WorkCard({ project, index }) {
+  const cardRef = useRef(null);
+  const isWide = index === 0;
+
+  const handleMouseMove = (e) => {
+    const card = cardRef.current;
+    if (!card) return;
+    const r = card.getBoundingClientRect();
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    const rx = (0.5 - py) * 6;
+    const ry = (px - 0.5) * 8;
+    card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+    card.style.setProperty("--mx", (px * 100) + "%");
+    card.style.setProperty("--my", (py * 100) + "%");
+  };
+
+  const handleMouseLeave = () => {
+    if (cardRef.current) cardRef.current.style.transform = "perspective(900px) rotateX(0) rotateY(0)";
+  };
+
+  const Wrapper = project.internal ? Link : "a";
+  const wrapperProps = project.internal
+    ? { to: project.link }
+    : { href: project.link, target: "_blank", rel: "noopener noreferrer" };
+
+  const mark = project.title.slice(0, 2).toUpperCase();
+
+  return (
+    <article className={isWide ? "md:col-span-2" : ""} data-reveal>
+      <Wrapper {...wrapperProps} className="block">
+        <div ref={cardRef}
+          className="work-card relative rounded-[16px] overflow-hidden p-[22px] flex flex-col cursor-pointer transition-all duration-180 group"
+          style={{
+            border: "1px solid var(--card-brd)", background: "var(--card)", minHeight: 260,
+            transformStyle: "preserve-3d", backdropFilter: "blur(10px)",
+          }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          onMouseEnter={e => e.currentTarget.style.borderColor = "var(--accent)"}
+        >
+          {/* watermark */}
+          <span className="absolute right-[-8px] bottom-[-28px] pointer-events-none"
+            style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: 110, color: "var(--ink)", opacity: 0.035, letterSpacing: "-0.05em", transform: "translateZ(8px)" }}
+          >
+            {mark}
+          </span>
+
+          {/* sheen */}
+          <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-400"
+            style={{ background: "radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.07), transparent 60%)", transform: "translateZ(60px)" }}
+          />
+
+          {project.image && (
+            <div className="relative rounded-[12px] overflow-hidden mb-[18px]"
+              style={{ aspectRatio: isWide ? "21/9" : "16/9", border: "1px solid var(--line-soft)", transform: "translateZ(30px)" }}
+            >
+              <img src={project.image} alt={project.title} loading="lazy"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
+            </div>
+          )}
+
+          <span className="text-[var(--ink-faint)] group-hover:text-[var(--accent)] transition-colors duration-300" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", transform: "translateZ(30px)" }}>
+            {(index + 1).toString().padStart(2, "0")}
+          </span>
+          <span className="mt-1" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: "10px", letterSpacing: "0.14em", color: "var(--ink-faint)", transform: "translateZ(20px)" }}>
+            {project.tech.toUpperCase()}
+          </span>
+          <h3 className="mt-3 mb-1" style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: "clamp(20px, 2.2vw, 28px)", letterSpacing: "-0.025em", transform: "translateZ(40px)" }}>
+            {project.title}
+          </h3>
+          <span className="opacity-85" style={{ color: "var(--ink)", fontSize: 13.5, fontWeight: 600, transform: "translateZ(30px)" }}>
+            {project.tagline}
+          </span>
+          <p className="mt-2.5 max-w-[54ch]" style={{ color: "var(--ink-dim)", fontSize: 13, lineHeight: 1.55, transform: "translateZ(20px)" }}>
+            {project.desc}
+          </p>
+          <ul className="mt-3 flex flex-col gap-1.5" style={{ listStyle: "none", transform: "translateZ(20px)" }}>
+            {project.highlights.slice(0, 2).map((b, j) => (
+              <li key={j} className="relative pl-[16px]" style={{ fontSize: 12.5, color: "var(--ink-dim)", lineHeight: 1.5 }}>
+                <span className="absolute left-0" style={{ color: "var(--accent)" }}>—</span>
+                {b}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-auto pt-4 flex items-center justify-between" style={{ transform: "translateZ(30px)" }}>
+            <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: "10px", letterSpacing: "0.12em", color: "var(--ink-faint)" }}>
+              ROLE — {project.role.toUpperCase()}
+            </span>
+            <span className="w-[36px] h-[36px] rounded-full grid place-items-center transition-all duration-300 group-hover:bg-[var(--accent)] group-hover:border-[var(--accent)]"
+              style={{ border: "1px solid var(--line)" }}
+            >
+              <svg className="transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ stroke: "var(--ink)" }}>
+                <path d="M7 17 17 7M9 7h8v8"/>
+              </svg>
+            </span>
+          </div>
+        </div>
+      </Wrapper>
+    </article>
   );
 }

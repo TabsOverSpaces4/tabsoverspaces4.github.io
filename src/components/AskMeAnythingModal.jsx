@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Search, Loader2, Bot, Sparkles } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { portfolioContext } from "../data/portfolio";
@@ -8,17 +6,32 @@ import { portfolioContext } from "../data/portfolio";
 const GOOGLE_SCRIPT_URL =
   "https://script.google.com/macros/s/AKfycbzVW6_B9KJZntWrDJtBGHmt1jjocq6-xTDdyjZr_kAeCkv1HRpGhcaqRTxnUOqZKzOw/exec";
 
+const SUGGESTIONS = [
+  "What makes you a good Product Manager?",
+  "Tell me about your latest work",
+  "How can I contact you?",
+];
+
 const AskMeAnythingModal = ({ isOpen, onClose }) => {
   const [query, setQuery] = useState("");
-  const [response, setResponse] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
+  const bodyRef = useRef(null);
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
+    if (isOpen) {
+      document.body.classList.add("no-scroll");
+      setTimeout(() => inputRef.current?.focus(), 60);
+    } else {
+      document.body.classList.remove("no-scroll");
     }
+    return () => document.body.classList.remove("no-scroll");
   }, [isOpen]);
+
+  useEffect(() => {
+    if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+  }, [messages]);
 
   const logToGoogleSheets = async (question, aiResponse) => {
     try {
@@ -36,12 +49,16 @@ const AskMeAnythingModal = ({ isOpen, onClose }) => {
     }
   };
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!query.trim()) return;
+  const ask = async (rawQuery) => {
+    const question = rawQuery.trim();
+    if (!question || loading) return;
 
+    setQuery("");
+    setMessages((m) => [...m, { role: "user", text: question }, { role: "bot", loading: true }]);
     setLoading(true);
-    setResponse(null);
+
+    const replaceLastBot = (text) =>
+      setMessages((m) => m.map((msg, i) => (i === m.length - 1 ? { role: "bot", text } : msg)));
 
     const workerUrl = import.meta.env.VITE_WORKER_URL;
 
@@ -50,7 +67,7 @@ const AskMeAnythingModal = ({ isOpen, onClose }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          query,
+          query: question,
           systemPrompt: portfolioContext,
         }),
       });
@@ -58,127 +75,83 @@ const AskMeAnythingModal = ({ isOpen, onClose }) => {
       if (!res.ok) throw new Error("API call failed");
 
       const data = await res.json();
-      const aiText = data?.text;
-
-      const finalResponse =
-        aiText || "I couldn't generate a response. Please try again.";
-      setResponse(finalResponse);
-      setLoading(false);
-
-      logToGoogleSheets(query, finalResponse);
+      const aiText = data?.text || "I couldn't generate a response. Please try again.";
+      replaceLastBot(aiText);
+      logToGoogleSheets(question, aiText);
     } catch (error) {
       console.error(error);
       const errorMessage =
         "Sorry, I encountered an error connecting to the AI service. Please check your API key.";
-      setResponse(errorMessage);
+      replaceLastBot(errorMessage);
+      logToGoogleSheets(question, errorMessage);
+    } finally {
       setLoading(false);
-
-      logToGoogleSheets(query, errorMessage);
     }
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    ask(query);
+  };
+
+  if (!isOpen) return null;
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 bg-neutral-950/60 backdrop-blur-sm z-[100]"
+    <div className="chat-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="chat-box">
+        <form className="chat-input-row" onSubmit={handleSubmit}>
+          <svg className="search" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Ask me anything (e.g., 'What makes you a good Product Manager?')"
+            autoComplete="off"
           />
+          <button type="button" className="esc" onClick={onClose}>ESC</button>
+        </form>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -20 }}
-            className="fixed left-1/2 top-[20%] -translate-x-1/2 w-[90%] max-w-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl rounded-xl overflow-hidden z-[101]"
-          >
-            <form
-              onSubmit={handleSearch}
-              className="relative flex items-center border-b border-neutral-100 dark:border-neutral-800 p-4"
-            >
-              <Search className="w-5 h-5 text-neutral-400 mr-3" />
-              <input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ask me anything (e.g., 'What makes you a good Product Manager?')"
-                className="flex-1 bg-transparent outline-none text-lg text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400"
-              />
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded text-neutral-400"
-                >
-                  <span className="text-xs font-mono border border-neutral-200 dark:border-neutral-700 rounded px-1.5 py-0.5">
-                    ESC
-                  </span>
-                </button>
+        <div className="chat-body" ref={bodyRef}>
+          {messages.length === 0 ? (
+            <div className="chat-empty">
+              <svg className="spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M12 3v6M12 15v6M3 12h6M15 12h6M5.6 5.6l4.2 4.2M14.2 14.2l4.2 4.2M18.4 5.6l-4.2 4.2M9.8 14.2l-4.2 4.2" /></svg>
+              <div className="pc">Powered by Claude</div>
+              <div className="chat-suggest">
+                {SUGGESTIONS.map((s) => (
+                  <button key={s} type="button" onClick={() => ask(s)}>{s}</button>
+                ))}
               </div>
-            </form>
-
-            <div className="bg-neutral-50 dark:bg-neutral-950/50 min-h-[120px] max-h-[60vh] overflow-y-auto p-6">
-              {!response && !loading && (
-                <div className="flex flex-col items-center justify-center h-full text-neutral-400 space-y-2 opacity-60 py-8">
-                  <Sparkles size={24} />
-                  <p className="text-sm">Powered by Claude</p>
+            </div>
+          ) : (
+            messages.map((msg, i) =>
+              msg.role === "user" ? (
+                <div className="msg user" key={i}>
+                  <div className="av">HG</div>
+                  <div className="bub">{msg.text}</div>
                 </div>
-              )}
-
-              {loading && (
-                <div className="flex flex-col items-center justify-center py-8 space-y-3">
-                  <Loader2 className="animate-spin text-orange-500" size={24} />
-                  <p className="text-xs uppercase tracking-widest text-neutral-500">
-                    Let me think...
-                  </p>
-                </div>
-              )}
-
-              {response && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="prose dark:prose-invert prose-sm max-w-none"
-                >
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-full bg-orange-500/10 flex items-center justify-center flex-shrink-0">
-                      <Bot size={16} className="text-orange-500" />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                          strong: ({ children }) => (
-                            <strong className="font-semibold text-neutral-900 dark:text-neutral-100">
-                              {children}
-                            </strong>
-                          ),
-                          li: ({ children }) => (
-                            <li className="ml-4 list-disc">{children}</li>
-                          ),
-                        }}
-                      >
-                        {response}
-                      </ReactMarkdown>
-                    </div>
+              ) : (
+                <div className="msg bot" key={i}>
+                  <div className="av">✦</div>
+                  <div className="bub">
+                    {msg.loading ? (
+                      <span className="dots"><span /><span /><span /></span>
+                    ) : (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.text}</ReactMarkdown>
+                    )}
                   </div>
-                </motion.div>
-              )}
-            </div>
+                </div>
+              )
+            )
+          )}
+        </div>
 
-            <div className="px-4 py-2 bg-neutral-100 dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 flex justify-between items-center text-[10px] text-neutral-500">
-              <span>Claude Active</span>
-              <span className="font-mono">ENTER to send</span>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+        <div className="chat-foot">
+          <span className="active"><span className="d" />Claude Active</span>
+          <span>ENTER to send</span>
+        </div>
+      </div>
+    </div>
   );
 };
 
