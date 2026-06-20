@@ -40,7 +40,7 @@ export default function Navbar({ onInstall }) {
           ))}
           <button
             onClick={onInstall}
-            className="text-sm font-semibold bg-[#5b8aff] hover:bg-[#4a7aee] text-white px-4 py-2 rounded-lg transition-colors duration-200"
+            className="text-sm font-semibold bg-[#5b8aff] hover:bg-[#4a7aee] text-white px-4 py-2 rounded-lg transition-[background-color,transform] duration-200 ease-[var(--ease-out)] active:scale-[0.97]"
           >
             Add to Chrome
           </button>

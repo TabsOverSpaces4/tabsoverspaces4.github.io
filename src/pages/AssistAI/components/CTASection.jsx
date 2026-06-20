@@ -21,7 +21,7 @@ export default function CTASection({ onInstall }) {
 
       <div
         ref={ref}
-        className={`relative z-10 max-w-3xl mx-auto text-center transition-all duration-700 ease-out ${
+        className={`relative z-10 max-w-3xl mx-auto text-center transition-[opacity,transform] duration-[600ms] ease-[var(--ease-out)] ${
           isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
         }`}
       >
@@ -55,7 +55,7 @@ export default function CTASection({ onInstall }) {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <button
             onClick={onInstall}
-            className="bg-[#5b8aff] hover:bg-[#4a7aee] text-white font-semibold px-8 py-3.5 rounded-xl shadow-lg transition-colors duration-200"
+            className="bg-[#5b8aff] hover:bg-[#4a7aee] text-white font-semibold px-8 py-3.5 rounded-xl shadow-lg transition-[background-color,transform] duration-200 ease-[var(--ease-out)] active:scale-[0.97]"
           >
             Add to Chrome — It's Free
           </button>
@@ -63,7 +63,7 @@ export default function CTASection({ onInstall }) {
             href="https://github.com/TabsOverSpaces4/AssistAI"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#8892b0] hover:text-[#eef0ff] transition-colors duration-200 font-medium"
+            className="text-[#8892b0] hover:text-[#eef0ff] transition-colors duration-200 ease-[var(--ease-out)] font-medium"
           >
             View source on GitHub →
           </a>

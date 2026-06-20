@@ -8,7 +8,7 @@ export default function MetricCard({ icon, color, name, description, delay }) {
   return (
     <div
       ref={ref}
-      className={`bg-white/[0.04] border border-white/[0.06] rounded-2xl p-5 transition-all duration-700 ease-out ${
+      className={`bg-white/[0.04] border border-white/[0.06] rounded-2xl p-5 transition-[opacity,transform] duration-[600ms] ease-[var(--ease-out)] ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
       }`}
       style={{ transitionDelay: isVisible ? `${delay}ms` : "0ms" }}

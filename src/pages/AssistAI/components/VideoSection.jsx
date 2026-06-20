@@ -14,7 +14,7 @@ export default function VideoSection() {
 
         <div
           ref={ref}
-          className={`transition-all duration-700 ease-out ${
+          className={`transition-[opacity,transform] duration-[600ms] ease-[var(--ease-out)] ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
           }`}
         >

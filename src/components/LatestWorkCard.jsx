@@ -2,7 +2,12 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { assistAIMetrics } from "../data/portfolio";
+
+const FLOW = ["Webhook", "Intake", "Master", "Tools"];
+const SAMPLE = {
+  message: "Add Aanya's birthday to my calendar on 22nd July",
+  result: "Calendar event · Aanya's Birthday · Jul 22 · All day",
+};
 
 const LatestWorkCard = () => {
   const [hovered, setHovered] = useState(false);
@@ -13,7 +18,7 @@ const LatestWorkCard = () => {
       className="border border-neutral-200 dark:border-neutral-800 hover:border-orange-500 dark:hover:border-orange-500 transition-colors overflow-hidden"
     >
       <Link
-        to="/projects/assistai"
+        to="/projects/chief-of-staff"
         className="group flex items-center justify-between px-4 py-3"
       >
         <div className="flex items-center gap-3">
@@ -24,10 +29,10 @@ const LatestWorkCard = () => {
           />
           <div>
             <span className="text-[12px] font-medium text-neutral-800 dark:text-neutral-200 group-hover:text-orange-500 transition-colors">
-              AssistAI
+              Chief of Staff
             </span>
             <span className="text-[11px] text-neutral-400 dark:text-neutral-500 ml-2">
-              — Cognitive AI Usage Tracker
+              — A Local-First Personal AI
             </span>
           </div>
         </div>
@@ -40,46 +45,50 @@ const LatestWorkCard = () => {
       <AnimatePresence>
         {hovered && (
           <motion.div
-            key="metrics"
+            key="flow"
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 pt-3 border-t border-neutral-100 dark:border-neutral-800/60 space-y-2.5">
+            <div className="px-4 pb-4 pt-3 border-t border-neutral-100 dark:border-neutral-800/60 space-y-3">
               <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-neutral-400 dark:text-neutral-600">
-                Sample Analysis
+                Sample Run
               </p>
-              {assistAIMetrics.map((metric, i) => (
-                <div key={metric.label} className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-neutral-500 dark:text-neutral-400">
-                      {metric.label}
-                    </span>
+
+              <p className="text-[10.5px] font-mono text-neutral-500 dark:text-neutral-400">
+                <span className="text-orange-500">›</span> {SAMPLE.message}
+              </p>
+
+              <div className="flex items-center gap-1.5">
+                {FLOW.map((step, i) => (
+                  <div key={step} className="flex items-center gap-1.5">
                     <motion.span
-                      className="text-[10px] font-mono text-orange-500"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: i * 0.12 + 0.2 }}
+                      className="text-[9px] font-mono px-1.5 py-0.5 border border-neutral-200 dark:border-neutral-800 text-neutral-500 dark:text-neutral-400"
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.1 }}
                     >
-                      {metric.value}
+                      {step}
                     </motion.span>
+                    {i < FLOW.length - 1 && (
+                      <span className="text-neutral-300 dark:text-neutral-700 text-[9px]">
+                        →
+                      </span>
+                    )}
                   </div>
-                  <div className="h-[2px] bg-neutral-100 dark:bg-neutral-800">
-                    <motion.div
-                      className="h-full bg-orange-500"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${metric.value}%` }}
-                      transition={{
-                        duration: 0.7,
-                        delay: i * 0.12,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              <motion.p
+                className="text-[10px] font-mono text-orange-500 pt-1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                ✓ {SAMPLE.result}
+              </motion.p>
             </div>
           </motion.div>
         )}

@@ -16,7 +16,7 @@ export default function Hero({ onInstall }) {
       <div className="relative z-10 max-w-6xl mx-auto px-6 pt-28 pb-20 w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         <div
           ref={ref}
-          className={`flex flex-col transition-all duration-700 ease-out ${
+          className={`flex flex-col transition-[opacity,transform] duration-[600ms] ease-[var(--ease-out)] ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
           }`}
         >
@@ -40,7 +40,7 @@ export default function Hero({ onInstall }) {
           <div className="flex flex-wrap gap-3 mb-8">
             <button
               onClick={onInstall}
-              className="inline-flex items-center bg-[#5b8aff] hover:bg-[#4a7aee] text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition-colors duration-200"
+              className="inline-flex items-center bg-[#5b8aff] hover:bg-[#4a7aee] text-white font-semibold px-6 py-3 rounded-xl shadow-lg transition-[background-color,transform] duration-200 ease-[var(--ease-out)] active:scale-[0.97]"
             >
               Add to Chrome
             </button>
@@ -48,7 +48,7 @@ export default function Hero({ onInstall }) {
               href="https://github.com/TabsOverSpaces4/AssistAI"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center border border-white/20 text-[#eef0ff] hover:bg-white/[0.06] font-semibold px-6 py-3 rounded-xl transition-colors duration-200"
+              className="inline-flex items-center border border-white/20 text-[#eef0ff] hover:bg-white/[0.06] font-semibold px-6 py-3 rounded-xl transition-[background-color,transform] duration-200 ease-[var(--ease-out)] active:scale-[0.97]"
             >
               View on GitHub
             </a>

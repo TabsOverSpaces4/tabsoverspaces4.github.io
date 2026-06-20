@@ -109,7 +109,7 @@ export default function Portfolio() {
       ring.style.transform = `translate(${rx}px,${ry}px) translate(-50%,-50%)`;
       rafId = requestAnimationFrame(loop);
     };
-    const hov = "a, button, .work-card, .spot-card, .exp-row, input, textarea, .edu-card, .chip, .skill";
+    const hov = "a, button, .work-stack-inner, .spot-card, .exp-row, input, textarea, .edu-card, .chip, .skill";
     const overHandler = (e) => { if (e.target.closest(hov)) ring.classList.add("grow"); };
     const outHandler = (e) => { if (e.target.closest(hov)) ring.classList.remove("grow"); };
     window.addEventListener("mousemove", onMove);
@@ -144,6 +144,45 @@ export default function Portfolio() {
     return () => { window.removeEventListener("scroll", check); window.removeEventListener("resize", check); };
   }, []);
 
+  /* ─── stacked-works depth: scale + dim each card as the next slides over it ─── */
+  useEffect(() => {
+    const cards = Array.from(document.querySelectorAll("[data-stack-card]"));
+    if (!cards.length) return;
+    const inners = cards.map(c => c.querySelector("[data-stack-inner]"));
+    const desktop = window.matchMedia("(min-width: 768px)");
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let ticking = false;
+
+    const apply = () => {
+      const stacking = desktop.matches && !reduce.matches;
+      const vh = window.innerHeight;
+      for (let i = 0; i < cards.length; i++) {
+        const inner = inners[i];
+        if (!inner) continue;
+        if (!stacking || i === cards.length - 1) {
+          inner.style.transform = "";
+          inner.style.opacity = "";
+          continue;
+        }
+        const nextTop = cards[i + 1].getBoundingClientRect().top;
+        const pin = parseFloat(cards[i].style.top) || 96;
+        const start = vh * 0.92;          // next card near the bottom → not covering yet
+        const end = pin + 16;             // next card pinned → fully covering
+        let p = (start - nextTop) / (start - end);
+        p = Math.max(0, Math.min(1, p));
+        inner.style.transform = `scale(${1 - p * 0.09})`;
+        inner.style.opacity = String(1 - p * 0.5);
+      }
+      ticking = false;
+    };
+    const onScroll = () => { if (!ticking) { ticking = true; requestAnimationFrame(apply); } };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    apply();
+    return () => { window.removeEventListener("scroll", onScroll); window.removeEventListener("resize", onScroll); };
+  }, []);
+
   return (
     <>
       {/* Background FX */}
@@ -158,7 +197,7 @@ export default function Portfolio() {
 
       {/* NAV */}
       <nav
-        className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between transition-all duration-400"
+        className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-between transition-[padding,background-color,backdrop-filter,border-color] duration-300 ease-[var(--ease-out)]"
         style={{
           padding: scrolled ? "14px 0" : "22px 0",
           background: scrolled ? "color-mix(in srgb, var(--bg) 72%, transparent)" : "transparent",
@@ -167,7 +206,7 @@ export default function Portfolio() {
         }}
       >
         <div className="w-[min(1280px,92vw)] mx-auto flex items-center justify-between">
-          <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="flex items-center gap-[9px]" style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: 20, letterSpacing: "-0.02em" }}>
+          <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="press flex items-center gap-[9px]" style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: 20, letterSpacing: "-0.02em" }}>
             <span className="w-[9px] h-[9px] rounded-full" style={{ background: "var(--accent)", boxShadow: "0 0 12px var(--accent-glow)" }} />
             Harsh Gupta.
           </button>
@@ -175,18 +214,18 @@ export default function Portfolio() {
           <div className="hidden md:flex items-center gap-1">
             {["experience","education","skills","work","contact"].map(id => (
               <button key={id} onClick={() => scrollTo(id)}
-                className="relative group px-[14px] py-2 rounded-full transition-colors duration-250"
+                className="relative group px-[14px] py-2 rounded-full"
                 style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: "11.5px", letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink-dim)" }}
               >
-                <span className="group-hover:text-[var(--ink)] transition-colors">{id}</span>
-                <span className="absolute left-[14px] right-[14px] bottom-1 h-px origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300" style={{ background: "var(--accent)" }} />
+                <span className="transition-colors duration-200 ease-[var(--ease-out)] group-hover:text-[var(--ink)]">{id}</span>
+                <span className="absolute left-[14px] right-[14px] bottom-1 h-px origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-[var(--ease-out)]" style={{ background: "var(--accent)" }} />
               </button>
             ))}
           </div>
 
           <div className="flex items-center gap-[10px]">
             <button onClick={() => setTheme(t => t === "dark" ? "light" : "dark")}
-              className="w-10 h-10 rounded-full grid place-items-center transition-all duration-250"
+              className="w-10 h-10 rounded-full grid place-items-center transition-[border-color,background-color,transform] duration-200 ease-[var(--ease-out)] active:scale-95"
               style={{ border: "1px solid var(--line)", background: "var(--surface)" }}
               aria-label="Toggle theme"
             >
@@ -198,7 +237,7 @@ export default function Portfolio() {
             </button>
 
             <button onClick={() => setIsSearchOpen(true)}
-              className="flex items-center gap-2 px-[18px] py-[10px] rounded-full font-semibold transition-all duration-300"
+              className="press flex items-center gap-2 px-[18px] py-[10px] rounded-full font-semibold"
               style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, letterSpacing: "0.05em", background: "var(--ink)", color: "var(--bg)" }}
             >
               <span className="w-[7px] h-[7px] rounded-full" style={{ background: "var(--accent)", animation: "pulse 1.8s infinite" }} />
@@ -241,10 +280,8 @@ export default function Portfolio() {
 
               <div className="flex flex-wrap gap-[10px] mb-[34px]" data-reveal>
                 {personalInfo.interests.map(interest => (
-                  <span key={interest} className="chip px-[15px] py-2 rounded-full cursor-default transition-all duration-300 hover:-translate-y-0.5"
-                    style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", border: "1px solid var(--line)", color: "var(--ink-dim)" }}
-                    onMouseEnter={e => { e.currentTarget.style.color = "var(--bg)"; e.currentTarget.style.background = "var(--accent)"; e.currentTarget.style.borderColor = "var(--accent)"; }}
-                    onMouseLeave={e => { e.currentTarget.style.color = "var(--ink-dim)"; e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "var(--line)"; }}
+                  <span key={interest} className="chip px-[15px] py-2 rounded-full cursor-default"
+                    style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase" }}
                   >
                     {interest}
                   </span>
@@ -260,12 +297,10 @@ export default function Portfolio() {
                   { label: "Resume", href: personalInfo.socials.resume, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg> },
                 ].map(s => (
                   <a key={s.label} href={s.href} target={s.label === "Email" ? undefined : "_blank"} rel="noopener noreferrer"
-                    className="inline-flex items-center gap-[7px] transition-colors duration-250 group"
-                    style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--ink-dim)" }}
-                    onMouseEnter={e => e.currentTarget.style.color = "var(--accent)"}
-                    onMouseLeave={e => e.currentTarget.style.color = "var(--ink-dim)"}
+                    className="lnk inline-flex items-center gap-[7px]"
+                    style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase" }}
                   >
-                    <span className="opacity-70 group-hover:opacity-100 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5">{s.icon}</span>
+                    <span className="lnk-ico opacity-70">{s.icon}</span>
                     {s.label}
                   </a>
                 ))}
@@ -295,7 +330,7 @@ export default function Portfolio() {
           <div style={{ borderTop: "1px solid var(--line)" }}>
             {experience.map((job, i) => (
               <div key={i}
-                className="exp-row grid gap-7 relative cursor-pointer transition-all duration-400"
+                className="exp-row grid gap-7 relative cursor-pointer transition-[padding-left,background-color] duration-400 ease-[var(--ease-out)]"
                 style={{
                   gridTemplateColumns: "52px 1fr auto",
                   padding: "26px 8px",
@@ -306,8 +341,8 @@ export default function Portfolio() {
                 data-reveal
                 onClick={() => setOpenExp(openExp === i ? -1 : i)}
               >
-                <span className="absolute left-0 top-0 bottom-0 w-[2px] origin-top transition-transform duration-400" style={{ background: "var(--accent)", transform: openExp === i ? "scaleY(1)" : "scaleY(0)" }} />
-                <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 13, color: openExp === i ? "var(--accent)" : "var(--ink-faint)", paddingTop: 6, transition: "color .4s" }}>
+                <span className="absolute left-0 top-0 bottom-0 w-[2px] origin-top transition-transform duration-400 ease-[var(--ease-in-out)]" style={{ background: "var(--accent)", transform: openExp === i ? "scaleY(1)" : "scaleY(0)" }} />
+                <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 13, color: openExp === i ? "var(--accent)" : "var(--ink-faint)", paddingTop: 6, transition: "color .3s var(--ease-out)" }}>
                   {(i + 1).toString().padStart(2, "0")}
                 </span>
                 <div className="flex flex-col gap-1">
@@ -317,7 +352,7 @@ export default function Portfolio() {
                   <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, letterSpacing: "0.08em", color: "var(--ink-dim)", textTransform: "uppercase" }}>
                     {job.role}
                   </span>
-                  <div className="transition-all duration-500 overflow-hidden" style={{ maxHeight: openExp === i ? 320 : 0, marginTop: openExp === i ? 14 : 0, opacity: openExp === i ? 1 : 0 }}>
+                  <div className="transition-[max-height,margin-top,opacity] duration-500 ease-[var(--ease-in-out)] overflow-hidden" style={{ maxHeight: openExp === i ? 320 : 0, marginTop: openExp === i ? 14 : 0, opacity: openExp === i ? 1 : 0 }}>
                     <ul className="flex flex-col gap-[9px]" style={{ listStyle: "none" }}>
                       {job.highlights.map((pt, j) => (
                         <li key={j} className="relative pl-5" style={{ color: "var(--ink-dim)", fontSize: "13px", lineHeight: 1.55 }}>
@@ -343,11 +378,9 @@ export default function Portfolio() {
           <SectionHead eyebrow="Academic Background" title={<>Sharpening the<br/>product edge.</>} />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {education.map((edu, i) => (
-              <div key={i} className="edu-card relative overflow-hidden rounded-[20px] p-7 md:p-[38px] transition-all duration-400 hover:-translate-y-1.5"
-                style={{ border: "1px solid var(--line)", background: "var(--surface)" }}
+              <div key={i} className="edu-card relative overflow-hidden rounded-[20px] p-7 md:p-[38px]"
+                style={{ background: "var(--surface)" }}
                 data-reveal
-                onMouseEnter={e => e.currentTarget.style.borderColor = "var(--accent)"}
-                onMouseLeave={e => e.currentTarget.style.borderColor = "var(--line)"}
               >
                 <span className="absolute right-[-10px] bottom-[-26px]" style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: 105, color: "var(--ink)", opacity: 0.04 }}>
                   {(i + 1).toString().padStart(2, "0")}
@@ -379,9 +412,9 @@ export default function Portfolio() {
         <div className="w-[min(1280px,92vw)] mx-auto">
           <SectionHead eyebrow="Selected Works" title={<>Things I've<br/>made &amp; shipped.</>} num={`01 — ${projects.length.toString().padStart(2, "0")}`} />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="work-stack relative">
             {projects.map((project, i) => (
-              <WorkCard key={i} project={project} index={i} />
+              <StackCard key={i} project={project} index={i} pinTop={96 + i * 14} />
             ))}
           </div>
 
@@ -404,7 +437,7 @@ export default function Portfolio() {
               <p className="mt-2" style={{ color: "var(--ink-dim)", fontSize: 14 }}>Discover repositories, contributions, and experiments.</p>
             </div>
             <a href={personalInfo.socials.github} target="_blank" rel="noopener noreferrer"
-              className="relative inline-flex items-center gap-3 px-[24px] py-[14px] rounded-full font-semibold transition-transform duration-300"
+              className="press relative inline-flex items-center gap-3 px-[24px] py-[14px] rounded-full font-semibold"
               style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, letterSpacing: "0.1em", textTransform: "uppercase", background: "var(--ink)", color: "var(--bg)" }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.36 1.09 2.94.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.99 1.03-2.69-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.6 1.03 2.69 0 3.84-2.34 4.69-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></svg>
@@ -436,10 +469,8 @@ export default function Portfolio() {
                 { label: "Email", href: `mailto:${personalInfo.email}` },
               ].map(l => (
                 <a key={l.label} href={l.href} target={l.label === "Email" ? undefined : "_blank"} rel="noopener noreferrer"
-                  className="transition-colors duration-250"
-                  style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, letterSpacing: "0.12em", color: "var(--ink-dim)", textTransform: "uppercase" }}
-                  onMouseEnter={e => e.currentTarget.style.color = "var(--accent)"}
-                  onMouseLeave={e => e.currentTarget.style.color = "var(--ink-dim)"}
+                  className="lnk"
+                  style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase" }}
                 >
                   {l.label}
                 </a>
@@ -499,7 +530,7 @@ function SpotlightCard({ spot }) {
 
   return (
     <div ref={cardRef}
-      className="spot-card relative rounded-[18px] p-[20px] transition-transform duration-150"
+      className="spot-card relative rounded-[18px] p-[20px] transition-transform duration-150 ease-[var(--ease-out)]"
       style={{
         background: "var(--card)", border: "1px solid var(--card-brd)", boxShadow: "var(--shadow)",
         backdropFilter: "blur(20px)", transformStyle: "preserve-3d", willChange: "transform",
@@ -552,11 +583,11 @@ function SpotlightCard({ spot }) {
 
       <div className="flex items-center justify-end mt-5" style={{ transform: "translateZ(30px)" }}>
         <button onClick={() => scrollTo("work")}
-          className="inline-flex items-center gap-2 group"
+          className="press inline-flex items-center gap-2 group"
           style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink)" }}
         >
           View work
-          <svg className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17 17 7M9 7h8v8"/></svg>
+          <svg className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300 ease-[var(--ease-out)]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17 17 7M9 7h8v8"/></svg>
         </button>
       </div>
     </div>
@@ -566,10 +597,8 @@ function SpotlightCard({ spot }) {
 /* ─── Marquee Row ─── */
 function MarqueeRow({ items, dur, reverse }) {
   const set = items.map((s, i) => (
-    <span key={i} className="skill inline-flex items-center gap-[16px] whitespace-nowrap transition-colors duration-300 cursor-default"
-      style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 600, fontSize: "clamp(18px, 2.4vw, 30px)", letterSpacing: "-0.02em", color: "var(--ink-faint)" }}
-      onMouseEnter={e => e.currentTarget.style.color = "var(--accent)"}
-      onMouseLeave={e => e.currentTarget.style.color = "var(--ink-faint)"}
+    <span key={i} className="skill inline-flex items-center gap-[16px] whitespace-nowrap cursor-default"
+      style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 600, fontSize: "clamp(18px, 2.4vw, 30px)", letterSpacing: "-0.02em" }}
     >
       {s}<span style={{ fontSize: "0.5em", color: "var(--ink-faint)" }}>✦</span>
     </span>
@@ -588,26 +617,16 @@ function MarqueeRow({ items, dur, reverse }) {
   );
 }
 
-/* ─── Work Card ─── */
-function WorkCard({ project, index }) {
-  const cardRef = useRef(null);
-  const isWide = index === 0;
+/* ─── Stacked Work Card (scroll-pinned showcase) ─── */
+function StackCard({ project, index, pinTop }) {
+  const innerRef = useRef(null);
 
   const handleMouseMove = (e) => {
-    const card = cardRef.current;
-    if (!card) return;
-    const r = card.getBoundingClientRect();
-    const px = (e.clientX - r.left) / r.width;
-    const py = (e.clientY - r.top) / r.height;
-    const rx = (0.5 - py) * 6;
-    const ry = (px - 0.5) * 8;
-    card.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
-    card.style.setProperty("--mx", (px * 100) + "%");
-    card.style.setProperty("--my", (py * 100) + "%");
-  };
-
-  const handleMouseLeave = () => {
-    if (cardRef.current) cardRef.current.style.transform = "perspective(900px) rotateX(0) rotateY(0)";
+    const el = innerRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    el.style.setProperty("--mx", ((e.clientX - r.left) / r.width) * 100 + "%");
+    el.style.setProperty("--my", ((e.clientY - r.top) / r.height) * 100 + "%");
   };
 
   const Wrapper = project.internal ? Link : "a";
@@ -615,76 +634,88 @@ function WorkCard({ project, index }) {
     ? { to: project.link }
     : { href: project.link, target: "_blank", rel: "noopener noreferrer" };
 
-  const mark = project.title.slice(0, 2).toUpperCase();
+  const mark = (index + 1).toString().padStart(2, "0");
 
   return (
-    <article className={isWide ? "md:col-span-2" : ""} data-reveal>
-      <Wrapper {...wrapperProps} className="block">
-        <div ref={cardRef}
-          className="work-card relative rounded-[16px] overflow-hidden p-[22px] flex flex-col cursor-pointer transition-all duration-180 group"
-          style={{
-            border: "1px solid var(--card-brd)", background: "var(--card)", minHeight: 260,
-            transformStyle: "preserve-3d", backdropFilter: "blur(10px)",
-          }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          onMouseEnter={e => e.currentTarget.style.borderColor = "var(--accent)"}
+    <article className="work-stack-card" data-stack-card style={{ position: "sticky", top: pinTop, height: "min(76vh, 560px)" }}>
+      <Wrapper {...wrapperProps} className="block h-full">
+        <div ref={innerRef} data-stack-inner onMouseMove={handleMouseMove}
+          className="work-stack-inner group relative h-full rounded-[22px] overflow-hidden flex flex-col md:flex-row cursor-pointer"
+          style={{ background: "var(--card)", backdropFilter: "blur(12px)", boxShadow: "var(--shadow)", transformOrigin: "center top" }}
         >
-          {/* watermark */}
-          <span className="absolute right-[-8px] bottom-[-28px] pointer-events-none"
-            style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: 110, color: "var(--ink)", opacity: 0.035, letterSpacing: "-0.05em", transform: "translateZ(8px)" }}
-          >
-            {mark}
-          </span>
-
-          {/* sheen */}
-          <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-400"
-            style={{ background: "radial-gradient(380px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.07), transparent 60%)", transform: "translateZ(60px)" }}
+          {/* cursor sheen */}
+          <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 ease-[var(--ease-out)] z-[3]"
+            style={{ background: "radial-gradient(500px circle at var(--mx, 50%) var(--my, 50%), rgba(255,255,255,.06), transparent 60%)" }}
           />
 
+          {/* image side — framed showcase panel: full image always visible (object-contain) */}
           {project.image && (
-            <div className="relative rounded-[12px] overflow-hidden mb-[18px]"
-              style={{ aspectRatio: isWide ? "21/9" : "16/9", border: "1px solid var(--line-soft)", transform: "translateZ(30px)" }}
+            <div className="relative w-full h-[40%] md:w-[48%] md:h-full shrink-0 flex items-center justify-center p-5 md:p-7 overflow-hidden border-b md:border-b-0 md:border-r border-[var(--line-soft)]"
+              style={{ background: "linear-gradient(150deg, var(--bg-3), var(--bg-2))" }}
             >
+              {/* soft accent glow for depth */}
+              <div className="absolute pointer-events-none" aria-hidden="true"
+                style={{ width: "70%", aspectRatio: "1", borderRadius: "50%", background: "radial-gradient(circle, var(--accent-glow), transparent 70%)", opacity: 0.25, filter: "blur(30px)" }}
+              />
               <img src={project.image} alt={project.title} loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
+                className="relative max-w-full max-h-full object-contain rounded-xl transition-transform duration-500 ease-[var(--ease-out)] group-hover:scale-[1.03]"
+                style={{ border: "1px solid var(--line-soft)", boxShadow: "0 24px 60px -24px rgba(0,0,0,0.65)" }} />
             </div>
           )}
 
-          <span className="text-[var(--ink-faint)] group-hover:text-[var(--accent)] transition-colors duration-300" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.14em", transform: "translateZ(30px)" }}>
-            {(index + 1).toString().padStart(2, "0")}
-          </span>
-          <span className="mt-1" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: "10px", letterSpacing: "0.14em", color: "var(--ink-faint)", transform: "translateZ(20px)" }}>
-            {project.tech.toUpperCase()}
-          </span>
-          <h3 className="mt-3 mb-1" style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: "clamp(20px, 2.2vw, 28px)", letterSpacing: "-0.025em", transform: "translateZ(40px)" }}>
-            {project.title}
-          </h3>
-          <span className="opacity-85" style={{ color: "var(--ink)", fontSize: 13.5, fontWeight: 600, transform: "translateZ(30px)" }}>
-            {project.tagline}
-          </span>
-          <p className="mt-2.5 max-w-[54ch]" style={{ color: "var(--ink-dim)", fontSize: 13, lineHeight: 1.55, transform: "translateZ(20px)" }}>
-            {project.desc}
-          </p>
-          <ul className="mt-3 flex flex-col gap-1.5" style={{ listStyle: "none", transform: "translateZ(20px)" }}>
-            {project.highlights.slice(0, 2).map((b, j) => (
-              <li key={j} className="relative pl-[16px]" style={{ fontSize: 12.5, color: "var(--ink-dim)", lineHeight: 1.5 }}>
-                <span className="absolute left-0" style={{ color: "var(--accent)" }}>—</span>
-                {b}
-              </li>
-            ))}
-          </ul>
-          <div className="mt-auto pt-4 flex items-center justify-between" style={{ transform: "translateZ(30px)" }}>
-            <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: "10px", letterSpacing: "0.12em", color: "var(--ink-faint)" }}>
-              ROLE — {project.role.toUpperCase()}
-            </span>
-            <span className="w-[36px] h-[36px] rounded-full grid place-items-center transition-all duration-300 group-hover:bg-[var(--accent)] group-hover:border-[var(--accent)]"
-              style={{ border: "1px solid var(--line)" }}
+          {/* content side */}
+          <div className="relative flex flex-col flex-1 p-6 md:p-9 z-[1] overflow-hidden">
+            {/* watermark number */}
+            <span className="absolute right-3 bottom-[-34px] pointer-events-none select-none"
+              style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: 150, color: "var(--ink)", opacity: 0.04, letterSpacing: "-0.05em" }}
             >
-              <svg className="transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ stroke: "var(--ink)" }}>
-                <path d="M7 17 17 7M9 7h8v8"/>
-              </svg>
+              {mark}
             </span>
+
+            <div className="flex items-center gap-3">
+              <span className="text-[var(--ink-faint)] group-hover:text-[var(--accent)] transition-colors duration-300 ease-[var(--ease-out)]" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 12, letterSpacing: "0.16em" }}>
+                {mark}
+              </span>
+              <span className="w-6 h-px" style={{ background: "var(--line)" }} />
+              <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: "10.5px", letterSpacing: "0.14em", color: "var(--ink-faint)", textTransform: "uppercase" }}>
+                {project.tech}
+              </span>
+            </div>
+
+            <h3 className="mt-4 mb-1.5" style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontWeight: 700, fontSize: "clamp(26px, 3.2vw, 44px)", letterSpacing: "-0.03em", lineHeight: 1.0 }}>
+              {project.title}
+            </h3>
+            <span style={{ color: "var(--ink)", fontSize: 15, fontWeight: 600, opacity: 0.9 }}>
+              {project.tagline}
+            </span>
+            <p className="mt-3 max-w-[56ch] line-clamp-3 md:line-clamp-none" style={{ color: "var(--ink-dim)", fontSize: 13.5, lineHeight: 1.6 }}>
+              {project.desc}
+            </p>
+
+            <ul className="mt-4 hidden sm:flex flex-col gap-2" style={{ listStyle: "none" }}>
+              {project.highlights.slice(0, 3).map((b, j) => (
+                <li key={j} className="relative pl-[18px]" style={{ fontSize: 13, color: "var(--ink-dim)", lineHeight: 1.5 }}>
+                  <span className="absolute left-0" style={{ color: "var(--accent)" }}>—</span>
+                  {b}
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-auto pt-5 flex items-center justify-between">
+              <span style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: "10.5px", letterSpacing: "0.12em", color: "var(--ink-faint)" }}>
+                ROLE — {project.role.toUpperCase()}
+              </span>
+              <span className="inline-flex items-center gap-2.5" style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink)" }}>
+                View project
+                <span className="w-[38px] h-[38px] rounded-full grid place-items-center transition-[background-color,border-color] duration-200 ease-[var(--ease-out)] group-hover:bg-[var(--accent)] group-hover:border-[var(--accent)]"
+                  style={{ border: "1px solid var(--line)" }}
+                >
+                  <svg className="transition-transform duration-300 ease-[var(--ease-out)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ stroke: "var(--ink)" }}>
+                    <path d="M7 17 17 7M9 7h8v8"/>
+                  </svg>
+                </span>
+              </span>
+            </div>
           </div>
         </div>
       </Wrapper>

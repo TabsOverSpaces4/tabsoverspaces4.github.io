@@ -70,7 +70,7 @@ export default function MetricsGrid() {
       <div className="max-w-5xl mx-auto">
         <div
           ref={headRef}
-          className={`text-center mb-12 transition-all duration-700 ease-out ${
+          className={`text-center mb-12 transition-[opacity,transform] duration-[600ms] ease-[var(--ease-out)] ${
             headVisible
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-5"
@@ -93,7 +93,7 @@ export default function MetricsGrid() {
 
         <div
           ref={belowRef}
-          className={`text-center transition-all duration-700 ease-out ${
+          className={`text-center transition-[opacity,transform] duration-[600ms] ease-[var(--ease-out)] ${
             belowVisible
               ? "opacity-100 translate-y-0"
               : "opacity-0 translate-y-5"

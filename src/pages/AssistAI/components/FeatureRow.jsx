@@ -10,7 +10,7 @@ export default function FeatureRow({ icon, borderColorClass, title, body, flip }
       ref={ref}
       className={`flex flex-col ${
         flip ? "md:flex-row-reverse" : "md:flex-row"
-      } gap-8 items-start transition-all duration-700 ease-out ${
+      } gap-8 items-start transition-[opacity,transform] duration-[600ms] ease-[var(--ease-out)] ${
         isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
       }`}
     >

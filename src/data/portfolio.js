@@ -11,6 +11,7 @@ import portfolioImg from "../assets/Portfolio Image.png";
 import theCruxImg from "../assets/theCruxPreview.png";
 import theAssistAIImg from "../assets/AssistAIPreview.png";
 import unboxdImg from "../assets/unboxedPreview.png";
+import chiefOfStaffImg from "../assets/ChiefOfStaffPreview.svg";
 
 export const personalInfo = {
   name: "Harsh Gupta",
@@ -100,6 +101,21 @@ export const education = [
 ];
 
 export const projects = [
+  {
+    title: "Chief of Staff",
+    tech: "Local LLM / n8n / Docker",
+    tagline: "A Local-First Personal AI",
+    desc: "A self-hosted, local-first AI Chief of Staff that turns one plain-English message into real action — creating calendar events, setting reminders, sending email, and searching the web to fill in what it can't know. A two-agent pipeline (Intake → Master) orchestrated in n8n, running entirely on my own hardware so private data never leaves the machine.",
+    highlights: [
+      "Two-agent design — an Intake Agent normalizes intent, a Master Agent acts with tools",
+      "Local LLM on Ollama, orchestrated in n8n inside Docker — fully self-hosted",
+      "Interactive workflow diagram with a simulated run — no live system exposed",
+    ],
+    role: "Solo Project",
+    image: chiefOfStaffImg,
+    link: "/projects/chief-of-staff",
+    internal: true,
+  },
   {
     title: "AssistAI",
     tech: "Chrome Extension / Gemini AI",
@@ -298,6 +314,9 @@ Bio: Currently pursuing a Master of Engineering Management at Duke University, l
   - Performed Linux server management, shell scripting, and system optimization.
 
 ===== PROJECTS (CURRENT & RECENT) =====
+
+- Chief of Staff (Local LLM / n8n / Docker) — Solo Project
+  A self-hosted, local-first AI Chief of Staff that turns one plain-English message ("Add Aanya's birthday to my calendar on 22nd July") into real action, creating Google Calendar events, setting reminders, sending Gmail messages, and searching the web (Tavily) to fill in details it can't know. Built as a two-agent pipeline orchestrated in n8n: an Intake Agent (local LLM) normalizes the request and extracts intent across six dimensions (what/why/who/where/when/tone), and a Master Agent (local LLM) acts on that clean brief using tools. The brain runs on Ollama and the whole stack runs in Docker on my own hardware, so private calendar and email data never leaves the machine. Privacy and ownership are the point. URL: /projects/chief-of-staff
 
 - AssistAI (Chrome Extension / Gemini AI) — Solo Project
   A Chrome extension that watches how you think alongside AI, not what you type. It tracks behavioral signals like scroll depth, prompt edit rate, and thinking time to score your Cognitive Engagement, AI Reliance, and Prompt Quality. 100% local storage — no accounts, no servers, no data leaving the browser.
