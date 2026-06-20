@@ -528,9 +528,15 @@ function SpotlightCard({ spot }) {
     if (cardRef.current) cardRef.current.style.transform = "perspective(900px) rotateX(0) rotateY(0)";
   };
 
+  const Wrapper = spot.internal ? Link : "a";
+  const wrapperProps = spot.internal
+    ? { to: spot.link }
+    : { href: spot.link, target: "_blank", rel: "noopener noreferrer" };
+
   return (
-    <div ref={cardRef}
-      className="spot-card relative rounded-[18px] p-[20px] transition-transform duration-150 ease-[var(--ease-out)]"
+    <Wrapper {...wrapperProps} ref={cardRef}
+      aria-label={`Open project: ${spot.title}`}
+      className="spot-card group block relative rounded-[18px] p-[20px] transition-transform duration-150 ease-[var(--ease-out)]"
       style={{
         background: "var(--card)", border: "1px solid var(--card-brd)", boxShadow: "var(--shadow)",
         backdropFilter: "blur(20px)", transformStyle: "preserve-3d", willChange: "transform",
@@ -582,15 +588,15 @@ function SpotlightCard({ spot }) {
       </div>
 
       <div className="flex items-center justify-end mt-5" style={{ transform: "translateZ(30px)" }}>
-        <button onClick={() => scrollTo("work")}
-          className="press inline-flex items-center gap-2 group"
+        <span
+          className="inline-flex items-center gap-2"
           style={{ fontFamily: '"JetBrains Mono", monospace', fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink)" }}
         >
-          View work
+          View project
           <svg className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300 ease-[var(--ease-out)]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17 17 7M9 7h8v8"/></svg>
-        </button>
+        </span>
       </div>
-    </div>
+    </Wrapper>
   );
 }
 
