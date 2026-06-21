@@ -32,8 +32,25 @@ export default function YouTubeEmbed({
           type="button"
           onClick={() => hasVideo && setPlaying(true)}
           aria-label={hasVideo ? `Play ${title}` : "Demo video coming soon"}
-          className="group absolute inset-0 flex flex-col items-center justify-center gap-5 cos-dotgrid"
+          className={`group absolute inset-0 flex flex-col items-center justify-center gap-5 ${hasVideo ? "" : "cos-dotgrid"}`}
         >
+          {hasVideo && (
+            <>
+              <img
+                src={`https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`}
+                alt={title}
+                loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.src = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+                }}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              <span
+                aria-hidden
+                className="absolute inset-0 bg-[var(--bg)]/35 transition-colors group-hover:bg-[var(--bg)]/20"
+              />
+            </>
+          )}
           <span className="relative flex items-center justify-center w-16 h-16 rounded-full border border-[var(--line-strong)] bg-[var(--bg)]/60 backdrop-blur-sm transition-colors group-hover:border-[var(--amber)]">
             <Play
               size={20}
@@ -41,7 +58,7 @@ export default function YouTubeEmbed({
               fill="currentColor"
             />
           </span>
-          <span className="cos-mono text-[11px] tracking-[0.28em] uppercase text-[var(--faint)]">
+          <span className="relative cos-mono text-[11px] tracking-[0.28em] uppercase text-[var(--faint)]">
             {hasVideo ? "Play demo" : "Demo video · arriving soon"}
           </span>
         </button>

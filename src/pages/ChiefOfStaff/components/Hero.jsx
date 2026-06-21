@@ -3,7 +3,7 @@ import { ArrowDown } from "lucide-react";
 import YouTubeEmbed from "./YouTubeEmbed";
 
 // Embed the real video later by swapping PLACEHOLDER for the YouTube id.
-const VIDEO_ID = "PLACEHOLDER";
+const VIDEO_ID = "PPnjC5aHdeg";
 
 const ease = [0.22, 1, 0.36, 1];
 
